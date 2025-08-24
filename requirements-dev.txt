@@ -1,0 +1,117 @@
+# MKD Automation - Development Dependencies
+# Additional dependencies needed for development, testing, and building
+
+# Include all production dependencies
+-r requirements.txt
+
+# Testing Framework
+pytest>=7.2.0                  # Python testing framework
+pytest-cov>=4.0.0              # Coverage plugin for pytest
+pytest-mock>=3.10.0            # Mock plugin for pytest
+pytest-xdist>=3.1.0            # Distributed testing plugin
+pytest-html>=3.1.0             # HTML test reports
+pytest-benchmark>=4.0.0        # Performance benchmarking
+pytest-timeout>=2.1.0          # Test timeout handling
+pytest-asyncio>=0.21.0         # Async testing support
+
+# Test Data and Mocking
+factory-boy>=3.2.0             # Test data generation
+faker>=18.0.0                  # Fake data generation
+responses>=0.22.0              # HTTP request mocking
+freezegun>=1.2.0               # Time/date mocking
+
+# Code Quality and Linting
+pylint>=2.17.0                 # Static code analysis
+flake8>=6.0.0                  # Style guide enforcement
+black>=23.0.0                  # Code formatting
+isort>=5.12.0                  # Import sorting
+mypy>=1.4.0                    # Static type checking
+bandit>=1.7.5                  # Security linting
+safety>=2.3.0                  # Dependency security checking
+
+# Code Quality Plugins
+flake8-docstrings>=1.7.0       # Docstring style checking
+flake8-import-order>=0.18.0    # Import order checking
+flake8-bugbear>=23.0.0         # Additional bug finding
+flake8-comprehensions>=3.12.0  # List/dict comprehension checking
+pep8-naming>=0.13.0            # PEP8 naming convention checking
+
+# Documentation
+sphinx>=6.0.0                  # Documentation generator
+sphinx-rtd-theme>=1.2.0        # Read the Docs theme
+sphinx-autodoc-typehints>=1.22.0  # Type hints in documentation
+myst-parser>=1.0.0             # Markdown support in Sphinx
+sphinx-copybutton>=0.5.0       # Copy button for code blocks
+
+# Build and Packaging
+build>=0.10.0                  # Modern Python build frontend
+twine>=4.0.0                   # Package uploading to PyPI
+setuptools-scm>=7.1.0          # Version management from git tags
+wheel>=0.40.0                  # Wheel building support
+
+# Development Tools
+pre-commit>=3.3.0              # Git pre-commit hooks
+tox>=4.5.0                     # Testing across Python versions  
+invoke>=2.1.0                  # Task runner (alternative to Make)
+watchdog>=3.0.0                # File system monitoring
+ipython>=8.12.0                # Enhanced Python shell
+ipdb>=0.13.0                   # IPython debugger
+
+# Performance and Profiling
+memory-profiler>=0.61.0        # Memory usage profiling
+line-profiler>=4.0.0           # Line-by-line profiling
+py-spy>=0.3.14                 # Sampling profiler
+
+# Development Utilities
+colorama>=0.4.6                # Cross-platform colored terminal output
+rich>=13.0.0                   # Rich text and beautiful formatting
+tabulate>=0.9.0                # Pretty-print tabular data
+python-dotenv>=1.0.0           # Environment variable loading
+
+# GUI Development (optional)
+tkinter-tooltip>=2.0.0         # Enhanced tkinter widgets
+customtkinter>=5.0.0           # Modern tkinter themes
+
+# Database (for testing and development data)
+sqlalchemy>=2.0.0              # Database ORM (if needed for advanced features)
+sqlite3                        # Built-in, but explicit for clarity
+
+# Async/Concurrency Testing
+asyncio-throttle>=1.0.0        # Rate limiting for async operations
+aiofiles>=23.0.0               # Async file operations (if needed)
+
+# Platform-specific development tools
+# Windows development
+pywin32-ctypes>=0.2.0; sys_platform == "win32"    # Alternative to pywin32 for some use cases
+
+# macOS development  
+py2app>=0.28.0; sys_platform == "darwin"          # macOS app packaging
+
+# Linux development
+cx-Freeze>=6.14.0; sys_platform == "linux"        # Cross-platform app freezing
+
+# Jupyter/Notebook support (for documentation and examples)
+jupyter>=1.0.0                 # Jupyter notebook
+notebook>=6.5.0                # Jupyter notebook server
+jupyter-contrib-nbextensions>=0.7.0  # Additional extensions
+
+# API documentation
+pdoc3>=0.10.0                  # Alternative documentation generator
+pydoc-markdown>=4.6.0          # Markdown-based API docs
+
+# Continuous Integration helpers
+coverage[toml]>=7.2.0          # Coverage measurement with TOML support
+codecov>=2.1.0                 # Coverage reporting to codecov.io
+github3.py>=4.0.0              # GitHub API interaction (for releases)
+
+# Development server and hot reload (if adding web components)
+flask>=2.3.0                   # Lightweight web framework (optional)
+flask-cors>=4.0.0              # Cross-origin resource sharing
+
+# Additional testing utilities for GUI
+pynput>=1.7.0                  # Alternative input simulation library
+pyautogui>=0.9.54              # GUI automation (for testing)
+
+# Mock/Stub generation
+responses>=0.22.0              # HTTP mocking
+pytest-httpserver>=1.0.0      # HTTP server for testing

@@ -1,0 +1,50 @@
+# MKD Automation - Production Dependencies
+# Core runtime dependencies for MKD Automation
+
+# Core Python libraries
+click>=8.0.0                    # Command-line interface framework
+pydantic>=1.10.0               # Data validation and settings management
+cryptography>=40.0.0           # Encryption and security features
+psutil>=5.9.0                  # System and process utilities
+pyyaml>=6.0                    # YAML configuration file support
+
+# GUI and User Interface
+tkinter-tooltip>=2.0.0         # Enhanced tkinter tooltips (if using tkinter)
+pillow>=9.0.0                  # Image processing for screenshots and icons
+packaging>=21.0                # Version parsing and package utilities
+
+# Cross-platform Input/Output
+keyboard>=0.13.5               # Cross-platform keyboard hooks (fallback)
+mouse>=0.7.1                   # Cross-platform mouse hooks (fallback)
+
+# Data Serialization and Storage
+msgpack>=1.0.0                 # Fast binary serialization
+lz4>=4.0.0                     # Fast compression algorithm
+orjson>=3.8.0                  # Fast JSON serialization
+
+# Timing and Performance
+schedule>=1.2.0                # Task scheduling
+cachetools>=5.0.0              # Caching utilities
+
+# Platform-specific dependencies (will be installed conditionally)
+# Windows
+pywin32>=227; sys_platform == "win32"              # Windows API bindings
+pygetwindow>=0.0.9; sys_platform == "win32"        # Window management
+pycaw>=20220416; sys_platform == "win32"           # Audio control
+
+# macOS  
+pyobjc-core>=9.0; sys_platform == "darwin"                        # Core Objective-C bridge
+pyobjc-framework-Cocoa>=9.0; sys_platform == "darwin"            # Cocoa framework
+pyobjc-framework-Quartz>=9.0; sys_platform == "darwin"           # Quartz/CoreGraphics
+pyobjc-framework-ApplicationServices>=9.0; sys_platform == "darwin"  # Application Services
+
+# Linux
+python-xlib>=0.33; sys_platform == "linux"         # X11 protocol library
+pycairo>=1.20.0; sys_platform == "linux"           # Cairo graphics library  
+pygobject>=3.40.0; sys_platform == "linux"         # GObject introspection
+evdev>=1.6.0; sys_platform == "linux"              # Input device interface
+
+# Optional but recommended
+requests>=2.28.0               # HTTP requests for updates/telemetry (optional)
+appdirs>=1.4.4                 # Cross-platform app directories
+python-dateutil>=2.8.0         # Enhanced date/time handling

@@ -1,0 +1,479 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mkd-automation"
+description = "Mouse Keyboard Display automation tool - A lazy automation engineer's best friend"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "MKD Automation Team", email = "dev@mkd-automation.com"},
+]
+maintainers = [
+    {name = "MKD Automation Team", email = "dev@mkd-automation.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: System Administrators",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Desktop Environment",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10", 
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Microsoft :: Windows :: Windows 11", 
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: X11 Applications",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: MacOS X",
+]
+keywords = [
+    "automation", 
+    "gui-automation", 
+    "mouse", 
+    "keyboard", 
+    "recording", 
+    "playback",
+    "testing", 
+    "desktop-automation",
+    "input-simulation",
+    "cross-platform"
+]
+requires-python = ">=3.9"
+dependencies = [
+    "click>=8.0.0",
+    "pydantic>=1.10.0",
+    "cryptography>=40.0.0",
+    "psutil>=5.9.0",
+    "pyyaml>=6.0",
+    "pillow>=9.0.0",
+    "packaging>=21.0",
+    "keyboard>=0.13.5",
+    "mouse>=0.7.1",
+    "msgpack>=1.0.0",
+    "lz4>=4.0.0",
+    "orjson>=3.8.0",
+    "schedule>=1.2.0",
+    "cachetools>=5.0.0",
+    "requests>=2.28.0",
+    "appdirs>=1.4.4",
+    "python-dateutil>=2.8.0",
+    # Platform-specific dependencies
+    "pywin32>=227; sys_platform=='win32'",
+    "pygetwindow>=0.0.9; sys_platform=='win32'",
+    "pycaw>=20220416; sys_platform=='win32'",
+    "pyobjc-core>=9.0; sys_platform=='darwin'",
+    "pyobjc-framework-Cocoa>=9.0; sys_platform=='darwin'",
+    "pyobjc-framework-Quartz>=9.0; sys_platform=='darwin'",
+    "pyobjc-framework-ApplicationServices>=9.0; sys_platform=='darwin'",
+    "python-xlib>=0.33; sys_platform=='linux'",
+    "pycairo>=1.20.0; sys_platform=='linux'",
+    "pygobject>=3.40.0; sys_platform=='linux'",
+    "evdev>=1.6.0; sys_platform=='linux'",
+]
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://github.com/yourusername/mkd_automation"
+documentation = "https://mkd-automation.readthedocs.io/"
+repository = "https://github.com/yourusername/mkd_automation"
+changelog = "https://github.com/yourusername/mkd_automation/blob/main/CHANGELOG.md"
+issues = "https://github.com/yourusername/mkd_automation/issues"
+discussions = "https://github.com/yourusername/mkd_automation/discussions"
+funding = "https://github.com/sponsors/yourusername"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.2.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "pytest-xdist>=3.1.0",
+    "pytest-html>=3.1.0",
+    "pytest-benchmark>=4.0.0",
+    "pytest-timeout>=2.1.0",
+    "pytest-asyncio>=0.21.0",
+    "pylint>=2.17.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.4.0",
+    "bandit>=1.7.5",
+    "safety>=2.3.0",
+    "pre-commit>=3.3.0",
+    "tox>=4.5.0",
+    "build>=0.10.0",
+    "twine>=4.0.0",
+    "sphinx>=6.0.0",
+    "sphinx-rtd-theme>=1.2.0",
+]
+test = [
+    "pytest>=7.2.0",
+    "pytest-cov>=4.0.0", 
+    "pytest-mock>=3.10.0",
+    "pytest-xdist>=3.1.0",
+    "factory-boy>=3.2.0",
+    "faker>=18.0.0",
+    "responses>=0.22.0",
+    "freezegun>=1.2.0",
+]
+docs = [
+    "sphinx>=6.0.0",
+    "sphinx-rtd-theme>=1.2.0",
+    "sphinx-autodoc-typehints>=1.22.0",
+    "myst-parser>=1.0.0",
+    "sphinx-copybutton>=0.5.0",
+]
+gui = [
+    "tkinter-tooltip>=2.0.0",
+    "customtkinter>=5.0.0",
+]
+performance = [
+    "memory-profiler>=0.61.0",
+    "line-profiler>=4.0.0",
+    "py-spy>=0.3.14",
+]
+
+[project.scripts]
+mkd-automation = "mkd.main:main"
+mkd = "mkd.main:main"
+
+[project.gui-scripts]
+mkd-gui = "mkd.ui.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mkd*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+mkd = [
+    "config/*.json",
+    "config/*.yaml", 
+    "resources/icons/*.png",
+    "resources/icons/*.ico",
+    "resources/sounds/*.wav",
+    "resources/themes/*.json",
+    "py.typed",
+]
+
+[tool.setuptools_scm]
+write_to = "src/mkd/_version.py"
+version_scheme = "post-release"
+local_scheme = "dirty-tag"
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # Directories to exclude
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | venv
+)/
+'''
+
+# isort configuration
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+src_paths = ["src", "tests"]
+skip_gitignore = true
+
+# mypy configuration
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "keyboard.*",
+    "mouse.*", 
+    "win32gui.*",
+    "win32api.*",
+    "win32con.*",
+    "pycaw.*",
+    "Xlib.*",
+    "cairo.*",
+    "gi.*",
+    "evdev.*",
+    "PyObjC.*",
+    "Cocoa.*",
+    "Quartz.*",
+]
+ignore_missing_imports = true
+
+# pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "--strict-markers",
+    "--strict-config", 
+    "--cov=src/mkd",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=85",
+    "-ra",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "gui: marks tests that require GUI",
+    "platform_specific: marks tests that are platform-specific",
+    "requires_permissions: marks tests that require special permissions",
+    "network: marks tests that require network access",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/venv/*",
+    "*/__pycache__/*",
+    "*/build/*",
+    "*/dist/*",
+    "setup.py",
+    "src/mkd/_version.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+    "TYPE_CHECKING",
+]
+ignore_errors = true
+show_missing = true
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+# Pylint configuration
+[tool.pylint.messages_control]
+disable = [
+    "C0103",  # invalid-name
+    "C0114",  # missing-module-docstring
+    "R0903",  # too-few-public-methods
+    "R0913",  # too-many-arguments
+    "W0613",  # unused-argument (handled by mypy)
+]
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.pylint.design]
+max-args = 8
+max-attributes = 12
+max-branches = 15
+max-locals = 20
+max-statements = 60
+
+# Bandit security linter configuration
+[tool.bandit]
+exclude_dirs = ["tests", "build", "dist"]
+tests = ["B201", "B301", "B302", "B303", "B304", "B305", "B306", "B307", "B308", "B309", "B310", "B311", "B312", "B313", "B314", "B315", "B316", "B317", "B318", "B319", "B320", "B321", "B322", "B323", "B324", "B325", "B601", "B602", "B603", "B604", "B605", "B606", "B607", "B608", "B609", "B610", "B611", "B701", "B702", "B703"]
+skips = ["B101", "B601"]
+
+# Flake8 configuration (in pyproject.toml format via flake8-pyproject)
+[tool.flake8]
+max-line-length = 88
+extend-ignore = [
+    "E203",  # whitespace before ':'
+    "W503",  # line break before binary operator
+    "E501",  # line too long (handled by black)
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+    ".venv",
+    "venv",
+]
+per-file-ignores = [
+    "__init__.py:F401",  # imported but unused
+    "tests/*:S101,S106",  # assert statements and hardcoded passwords in tests are OK
+]
+
+# Tox configuration for testing across Python versions
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py39,py310,py311,py312,lint,security,docs
+isolated_build = true
+
+[gh-actions]
+python = 
+    3.9: py39
+    3.10: py310 
+    3.11: py311
+    3.12: py312
+
+[testenv]
+deps = 
+    -r{toxinidir}/requirements-dev.txt
+commands = 
+    pytest {posargs}
+
+[testenv:lint]
+deps = 
+    pylint
+    flake8
+    mypy
+    black
+    isort
+commands = 
+    black --check src tests
+    isort --check src tests
+    flake8 src tests
+    pylint src
+    mypy src
+
+[testenv:security] 
+deps = 
+    bandit
+    safety
+commands = 
+    bandit -r src
+    safety check
+
+[testenv:docs]
+deps = 
+    -r{toxinidir}/requirements-dev.txt
+commands = 
+    sphinx-build -W -b html docs docs/_build/html
+
+[testenv:build]
+deps = 
+    build
+    twine
+commands = 
+    python -m build
+    twine check dist/*
+"""
+
+# Pre-commit configuration
+[tool.pre-commit]
+repos = [
+    {
+        repo = "https://github.com/pre-commit/pre-commit-hooks",
+        rev = "v4.4.0",
+        hooks = [
+            {id = "trailing-whitespace"},
+            {id = "end-of-file-fixer"},
+            {id = "check-yaml"},
+            {id = "check-json"},
+            {id = "check-toml"},
+            {id = "check-merge-conflict"},
+            {id = "debug-statements"},
+            {id = "name-tests-test", args = ["--django"]},
+        ]
+    },
+    {
+        repo = "https://github.com/psf/black",
+        rev = "23.7.0", 
+        hooks = [
+            {id = "black", language_version = "python3"}
+        ]
+    },
+    {
+        repo = "https://github.com/pycqa/isort",
+        rev = "5.12.0",
+        hooks = [
+            {id = "isort"}
+        ]
+    },
+    {
+        repo = "https://github.com/pycqa/flake8",
+        rev = "6.0.0",
+        hooks = [
+            {id = "flake8"}
+        ]
+    },
+    {
+        repo = "https://github.com/pre-commit/mirrors-mypy", 
+        rev = "v1.5.1",
+        hooks = [
+            {id = "mypy", additional_dependencies = ["types-all"]}
+        ]
+    },
+    {
+        repo = "https://github.com/PyCQA/bandit",
+        rev = "1.7.5",
+        hooks = [
+            {id = "bandit", args = ["-c", "pyproject.toml"]}
+        ]
+    },
+]
