@@ -16,6 +16,7 @@ packaging>=21.0                # Version parsing and package utilities
 # Cross-platform Input/Output
 keyboard>=0.13.5               # Cross-platform keyboard hooks (fallback)
 mouse>=0.7.1                   # Cross-platform mouse hooks (fallback)
+pynput>=1.7.6                  # Cross-platform input monitoring
 
 # Data Serialization and Storage
 msgpack>=1.0.0                 # Fast binary serialization

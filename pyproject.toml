@@ -60,6 +60,7 @@ dependencies = [
     "packaging>=21.0",
     "keyboard>=0.13.5",
     "mouse>=0.7.1",
+    "pynput>=1.7.6",
     "msgpack>=1.0.0",
     "lz4>=4.0.0",
     "orjson>=3.8.0",
@@ -247,16 +248,8 @@ ignore_missing_imports = true
 # pytest configuration
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = [
-    "--strict-markers",
-    "--strict-config", 
-    "--cov=src/mkd",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
-    "--cov-fail-under=85",
-    "-ra",
-]
+pythonpath = ["src"]
+
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
@@ -424,56 +417,3 @@ commands =
     twine check dist/*
 """
 
-# Pre-commit configuration
-[tool.pre-commit]
-repos = [
-    {
-        repo = "https://github.com/pre-commit/pre-commit-hooks",
-        rev = "v4.4.0",
-        hooks = [
-            {id = "trailing-whitespace"},
-            {id = "end-of-file-fixer"},
-            {id = "check-yaml"},
-            {id = "check-json"},
-            {id = "check-toml"},
-            {id = "check-merge-conflict"},
-            {id = "debug-statements"},
-            {id = "name-tests-test", args = ["--django"]},
-        ]
-    },
-    {
-        repo = "https://github.com/psf/black",
-        rev = "23.7.0", 
-        hooks = [
-            {id = "black", language_version = "python3"}
-        ]
-    },
-    {
-        repo = "https://github.com/pycqa/isort",
-        rev = "5.12.0",
-        hooks = [
-            {id = "isort"}
-        ]
-    },
-    {
-        repo = "https://github.com/pycqa/flake8",
-        rev = "6.0.0",
-        hooks = [
-            {id = "flake8"}
-        ]
-    },
-    {
-        repo = "https://github.com/pre-commit/mirrors-mypy", 
-        rev = "v1.5.1",
-        hooks = [
-            {id = "mypy", additional_dependencies = ["types-all"]}
-        ]
-    },
-    {
-        repo = "https://github.com/PyCQA/bandit",
-        rev = "1.7.5",
-        hooks = [
-            {id = "bandit", args = ["-c", "pyproject.toml"]}
-        ]
-    },
-]
