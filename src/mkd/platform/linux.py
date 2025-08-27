@@ -12,3 +12,8 @@ class LinuxPlatform(BasePlatform):
         """Stops capturing input events."""
         # TODO: Implement using pynput
         print("Stopping capture on Linux")
+
+    def execute_action(self, action):
+        """Executes a single action."""
+        # TODO: Implement using pynput
+        print(f"Executing action on Linux: {action}")

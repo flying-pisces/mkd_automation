@@ -12,3 +12,8 @@ class BasePlatform(ABC):
     def stop_capture(self):
         """Stops capturing input events."""
         pass
+
+    @abstractmethod
+    def execute_action(self, action):
+        """Executes a single action."""
+        pass
