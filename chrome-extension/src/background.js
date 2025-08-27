@@ -9,12 +9,73 @@
  * - Extension lifecycle events
  */
 
-// Import messaging handler
-importScripts('messaging.js');
+// Simple native messaging handler for Week 1
+class SimpleNativeMessagingHandler {
+    constructor() {
+        this.hostName = 'com.mkd.automation';
+        this.port = null;
+        this.isConnected = false;
+        this.messageId = 0;
+        this.pendingRequests = new Map();
+    }
+    
+    async startRecording(config) {
+        return this.sendMessage('START_RECORDING', config);
+    }
+    
+    async stopRecording(sessionId) {
+        return this.sendMessage('STOP_RECORDING', { sessionId });
+    }
+    
+    async pauseRecording(sessionId) {
+        return this.sendMessage('PAUSE_RECORDING', { sessionId });
+    }
+    
+    async resumeRecording(sessionId) {
+        return this.sendMessage('RESUME_RECORDING', { sessionId });
+    }
+    
+    async getStatus() {
+        return this.sendMessage('GET_STATUS', {});
+    }
+    
+    getConnectionStatus() {
+        return {
+            isConnected: this.isConnected,
+            hostName: this.hostName,
+            lastError: this.lastError || null
+        };
+    }
+    
+    async sendMessage(command, params = {}) {
+        return new Promise((resolve, reject) => {
+            const messageId = ++this.messageId;
+            const message = {
+                id: messageId,
+                command: command,
+                params: params,
+                timestamp: Date.now()
+            };
+            
+            // For Week 1, simulate connection failure since native host isn't set up
+            setTimeout(() => {
+                reject(new Error('Could not establish connection: Native host not installed'));
+            }, 100);
+        });
+    }
+    
+    cleanup() {
+        if (this.port) {
+            this.port.disconnect();
+            this.port = null;
+        }
+        this.isConnected = false;
+    }
+}
 
 class MKDBackgroundService {
     constructor() {
-        this.nativeMessaging = new NativeMessagingHandler();
+        this.nativeMessaging = new SimpleNativeMessagingHandler();
         this.currentSession = null;
         this.recordingState = {
             isRecording: false,
@@ -343,21 +404,15 @@ class MKDBackgroundService {
      * Show notification to user
      */
     showNotification(message, type = 'info') {
-        const iconUrl = type === 'error' ? 'icons/icon32.png' : 'icons/icon32.png';
-        
-        chrome.notifications.create({
-            type: 'basic',
-            iconUrl: iconUrl,
-            title: 'MKD Automation',
-            message: message
-        });
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        // Note: Notifications require permission in manifest
     }
     
     /**
      * Show welcome notification on first install
      */
     showWelcomeNotification() {
-        this.showNotification('MKD Automation installed successfully! Click the extension icon to start recording.');
+        console.log('MKD Automation installed successfully! Click the extension icon to start recording.');
     }
     
     /**
