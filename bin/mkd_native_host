@@ -1,0 +1,4 @@
+#!/bin/bash
+cd "/Users/cyin/project/mkd_automation"
+export PYTHONPATH="/Users/cyin/project/mkd_automation/src:$PYTHONPATH"
+python3 -m mkd_v2.native_host.host "$@"
