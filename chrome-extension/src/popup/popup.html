@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MKD Automation</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <img src="../../icons/icon32.png" alt="MKD Logo" class="logo">
+            <h1>MKD Automation</h1>
+            <div class="version">v2.0</div>
+        </div>
+        
+        <!-- Status Display -->
+        <div class="status-section">
+            <div class="status-indicator" id="statusIndicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-text" id="statusText">Ready</span>
+            </div>
+            
+            <div class="connection-status" id="connectionStatus">
+                <span class="connection-text" id="connectionText">Checking connection...</span>
+            </div>
+        </div>
+        
+        <!-- Recording Controls -->
+        <div class="controls-section">
+            <!-- Start/Stop Button -->
+            <div class="main-control">
+                <button id="startStopButton" class="control-button start-button" disabled>
+                    <div class="button-icon" id="buttonIcon">
+                        <svg class="play-icon" viewBox="0 0 24 24">
+                            <polygon points="5,3 19,12 5,21"></polygon>
+                        </svg>
+                    </div>
+                    <span class="button-text" id="buttonText">Start Recording</span>
+                </button>
+            </div>
+            
+            <!-- Secondary Controls -->
+            <div class="secondary-controls" id="secondaryControls" style="display: none;">
+                <button id="pauseResumeButton" class="control-button pause-button">
+                    <svg class="pause-icon" viewBox="0 0 24 24">
+                        <rect x="6" y="4" width="4" height="16"></rect>
+                        <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                    <span>Pause</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Recording Information -->
+        <div class="info-section" id="infoSection" style="display: none;">
+            <div class="info-item">
+                <span class="info-label">Duration:</span>
+                <span class="info-value" id="durationText">00:00:00</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Session ID:</span>
+                <span class="info-value" id="sessionIdText">-</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Events:</span>
+                <span class="info-value" id="eventsCountText">0</span>
+            </div>
+        </div>
+        
+        <!-- Settings -->
+        <div class="settings-section">
+            <div class="settings-toggle" id="settingsToggle">
+                <svg class="settings-icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span>Settings</span>
+            </div>
+            
+            <div class="settings-panel" id="settingsPanel" style="display: none;">
+                <div class="setting-item">
+                    <label for="captureVideo">
+                        <input type="checkbox" id="captureVideo" checked>
+                        Capture Video
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="captureAudio">
+                        <input type="checkbox" id="captureAudio">
+                        Capture Audio
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="showBorder">
+                        <input type="checkbox" id="showBorder" checked>
+                        Show Recording Border
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="borderColor">Border Color:</label>
+                    <input type="color" id="borderColor" value="#FF0000">
+                </div>
+                
+                <div class="setting-item">
+                    <label for="mouseSampleRate">Mouse Sample Rate:</label>
+                    <select id="mouseSampleRate">
+                        <option value="30">30 Hz</option>
+                        <option value="60" selected>60 Hz</option>
+                        <option value="120">120 Hz</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="keyboardCapture">
+                        <input type="checkbox" id="keyboardCapture" checked>
+                        Capture Keyboard
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Display -->
+        <div class="error-section" id="errorSection" style="display: none;">
+            <div class="error-message" id="errorMessage"></div>
+            <button class="error-dismiss" id="errorDismiss">×</button>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="shortcut-hint">
+                <kbd>Ctrl+Shift+R</kbd> to stop recording
+            </div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
