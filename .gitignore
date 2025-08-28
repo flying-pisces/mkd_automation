@@ -75,3 +75,33 @@ config/local_*.json
 *.tmp
 *.bak
 .cache/
+
+# Development artifacts
+week*_validation/
+week*_integration/
+week*_intelligence/
+DAY*_*.md
+WEEK*_*.md
+CHECKPOINT_*.md
+*_STATUS*.md
+*_PLANNING.md
+*_TEST_REPORT.md
+validate_*.py
+demo_*.py
+fix_*.py
+chrome_launcher.py
+launch_extension.*
+create_structure.sh
+load_extension_guide.md
+test-results/
+test_results/
+tests/*/logs/
+tests/comprehensive_logs/
+
+# Chrome extension build artifacts
+*.crx
+*.pem
+chrome-extension.zip
+
+# Native messaging (if regenerated locally)
+native-messaging/

@@ -57,11 +57,66 @@ class SimpleNativeMessagingHandler {
                 timestamp: Date.now()
             };
             
-            // For Week 1, simulate connection failure since native host isn't set up
-            setTimeout(() => {
-                reject(new Error('Could not establish connection: Native host not installed'));
-            }, 100);
+            try {
+                // Connect to native host if not already connected
+                if (!this.port || this.port.error) {
+                    this.port = chrome.runtime.connectNative(this.hostName);
+                    this.setupPortHandlers();
+                }
+                
+                // Store pending request
+                this.pendingRequests.set(messageId, { resolve, reject });
+                
+                // Send message
+                this.port.postMessage(message);
+                
+                // Set timeout for response
+                setTimeout(() => {
+                    if (this.pendingRequests.has(messageId)) {
+                        this.pendingRequests.delete(messageId);
+                        reject(new Error('Request timeout'));
+                    }
+                }, 10000); // 10 second timeout
+                
+            } catch (error) {
+                reject(new Error(`Native messaging error: ${error.message}`));
+            }
         });
+    }
+    
+    setupPortHandlers() {
+        if (!this.port) return;
+        
+        this.port.onMessage.addListener((response) => {
+            const messageId = response.id;
+            if (this.pendingRequests.has(messageId)) {
+                const { resolve, reject } = this.pendingRequests.get(messageId);
+                this.pendingRequests.delete(messageId);
+                
+                if (response.result.success) {
+                    resolve(response.result);
+                } else {
+                    reject(new Error(response.result.error));
+                }
+            }
+        });
+        
+        this.port.onDisconnect.addListener(() => {
+            this.isConnected = false;
+            this.lastError = chrome.runtime.lastError?.message || 'Connection lost';
+            
+            // Reject all pending requests
+            for (const [messageId, { reject }] of this.pendingRequests) {
+                reject(new Error('Native host disconnected'));
+            }
+            this.pendingRequests.clear();
+            
+            console.warn('Native host disconnected:', this.lastError);
+        });
+        
+        // Mark as connected
+        this.isConnected = true;
+        this.lastError = null;
     }
     
     cleanup() {
