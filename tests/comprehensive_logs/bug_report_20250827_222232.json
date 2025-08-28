@@ -1,0 +1,25 @@
+{
+  "summary": {
+    "total_bugs": 1,
+    "critical": 1,
+    "high": 0,
+    "medium": 0,
+    "low": 0
+  },
+  "bugs": [
+    {
+      "bug_id": "ACC-007",
+      "severity": "critical",
+      "category": "functional",
+      "title": "Missing Error Handling",
+      "description": "No exception raised for nonexistent component",
+      "steps_to_reproduce": [
+        "Try to get nonexistent component"
+      ],
+      "expected_result": "Should raise ComponentNotFoundError",
+      "actual_result": "No exception raised",
+      "test_level": "acceptance",
+      "timestamp": "2025-08-27T22:22:33.328574"
+    }
+  ]
+}

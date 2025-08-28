@@ -1,0 +1,58 @@
+{
+  "test_session": {
+    "timestamp": "2025-08-27T22:23:30.933850",
+    "duration": 0.39253783226013184,
+    "total_tests": 25,
+    "total_passed": 20,
+    "total_failed": 5,
+    "overall_success_rate": 80.0
+  },
+  "test_levels": {
+    "unit": {
+      "passed": 10,
+      "failed": 0,
+      "total": 10,
+      "success_rate": 100.0
+    },
+    "integration": {
+      "passed": 2,
+      "failed": 3,
+      "total": 5,
+      "success_rate": 40.0
+    },
+    "system": {
+      "passed": 4,
+      "failed": 1,
+      "total": 5,
+      "success_rate": 80.0
+    },
+    "acceptance": {
+      "passed": 4,
+      "failed": 1,
+      "total": 5,
+      "success_rate": 80.0
+    }
+  },
+  "bugs_found": 0,
+  "critical_bugs": 0,
+  "high_priority_bugs": 0,
+  "performance_metrics": {
+    "average_test_duration": 0.015578365325927735,
+    "max_test_duration": 0.10783123970031738,
+    "min_test_duration": 2.384185791015625e-05,
+    "total_test_time": 0.38945913314819336,
+    "tests_with_metrics": 25
+  },
+  "memory_analysis": {
+    "baseline_memory_mb": 49.65625,
+    "current_memory_mb": 74.171875,
+    "memory_growth_mb": 24.515625,
+    "memory_growth_percentage": 49.370673379483954,
+    "peak_memory_mb": 74.171875,
+    "average_memory_mb": 64.5325
+  },
+  "recommendations": [
+    "\u2705 Good test results. Address remaining issues before production.",
+    "\u26a0\ufe0f  Integration tests below 80% success rate - needs attention."
+  ]
+}

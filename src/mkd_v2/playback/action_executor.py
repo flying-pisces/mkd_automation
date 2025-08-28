@@ -7,8 +7,8 @@ timing, and platform-specific adaptations.
 
 import logging
 import time
-from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from dataclasses import dataclass, field
+from typing import Dict, Any, Optional, List
 from enum import Enum
 
 from ..automation.automation_engine import AutomationEngine
@@ -26,13 +26,30 @@ class ExecutionStatus(Enum):
 
 
 @dataclass
+class ExecutionConfig:
+    """Configuration for action execution"""
+    speed_multiplier: float = 1.0
+    fail_on_error: bool = True
+    screenshot_on_error: bool = False
+    max_retry_attempts: int = 1
+    retry_delay: float = 1.0
+    timeout: float = 30.0
+    verify_actions: bool = False
+    skip_waits: bool = False
+
+
+@dataclass
 class ExecutionResult:
     """Result of action execution."""
     success: bool
-    status: ExecutionStatus
-    execution_time: float
+    status: ExecutionStatus = ExecutionStatus.SUCCESS
+    execution_time: float = 0.0
     error_message: Optional[str] = None
     action_type: Optional[str] = None
+    successful_actions: int = 0
+    failed_actions: int = 0
+    duration: float = 0.0
+    error: Optional[str] = None
     
     @property
     def failed(self) -> bool:

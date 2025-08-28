@@ -9,11 +9,13 @@ Provides intelligent playback of recorded automation sequences:
 """
 
 from .playback_engine import PlaybackEngine, PlaybackResult, PlaybackStatus
-from .action_executor import ActionExecutor, ExecutionResult
+from .action_executor import ActionExecutor, ExecutionResult, ExecutionConfig
 from .sequence_validator import SequenceValidator, ValidationResult
+from ..input.input_action import InputAction, ActionType
 
 __all__ = [
     "PlaybackEngine", "PlaybackResult", "PlaybackStatus",
-    "ActionExecutor", "ExecutionResult", 
-    "SequenceValidator", "ValidationResult"
+    "ActionExecutor", "ExecutionResult", "ExecutionConfig",
+    "SequenceValidator", "ValidationResult",
+    "InputAction", "ActionType"
 ]

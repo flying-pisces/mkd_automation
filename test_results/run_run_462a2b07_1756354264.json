@@ -1,0 +1,48 @@
+{
+  "run_id": "run_462a2b07_1756354264",
+  "start_time": 1756354264.4787,
+  "end_time": 1756354264.479442,
+  "duration": 0.0007419586181640625,
+  "total_suites": 1,
+  "suite_results": {
+    "test_orchestrator_suite_ef59204a": {
+      "suite_id": "test_orchestrator_suite_ef59204a",
+      "name": "test_orchestrator_suite",
+      "start_time": 1756354264.478815,
+      "test_results": [
+        "test_orchestrator_suite_simple_test_766ec745",
+        "test_orchestrator_suite_failing_test_a60ededf"
+      ],
+      "passed_count": 0,
+      "failed_count": 0,
+      "skipped_count": 0,
+      "error_count": 2,
+      "status": "error",
+      "end_time": 1756354264.4793558,
+      "duration": 0.0005407333374023438
+    }
+  },
+  "test_results": {
+    "test_orchestrator_suite_simple_test_766ec745": "TestResult(test_id='test_orchestrator_suite_simple_test_766ec745', name='simple_test', status=<TestStatus.ERROR: 'error'>, start_time=1756354264.478827, end_time=1756354264.479251, duration=0.0004239082336425781, error_message='signal only works in main thread of the main interpreter', error_traceback='Traceback (most recent call last):\\n  File \"/Users/cyin/project/mkd_automation/src/mkd_v2/testing/test_orchestrator.py\", line 471, in _run_single_test\\n    signal.signal(signal.SIGALRM, timeout_handler)\\n  File \"/opt/homebrew/anaconda3/lib/python3.12/signal.py\", line 58, in signal\\n    handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))\\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nValueError: signal only works in main thread of the main interpreter\\n', output='', metadata={})",
+    "test_orchestrator_suite_failing_test_a60ededf": "TestResult(test_id='test_orchestrator_suite_failing_test_a60ededf', name='failing_test', status=<TestStatus.ERROR: 'error'>, start_time=1756354264.479261, end_time=1756354264.4793532, duration=9.226799011230469e-05, error_message='signal only works in main thread of the main interpreter', error_traceback='Traceback (most recent call last):\\n  File \"/Users/cyin/project/mkd_automation/src/mkd_v2/testing/test_orchestrator.py\", line 471, in _run_single_test\\n    signal.signal(signal.SIGALRM, timeout_handler)\\n  File \"/opt/homebrew/anaconda3/lib/python3.12/signal.py\", line 58, in signal\\n    handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))\\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nValueError: signal only works in main thread of the main interpreter\\n', output='', metadata={})"
+  },
+  "summary": {
+    "total": 2,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 2,
+    "timeouts": 0,
+    "success_rate": 0.0,
+    "average_duration": 0.0002580881118774414
+  },
+  "config": {
+    "fail_fast": false,
+    "parallel_execution": true,
+    "timeout_multiplier": 1.0,
+    "retry_failed": true,
+    "coverage_threshold": 80.0,
+    "performance_baseline": true,
+    "detailed_logging": true
+  }
+}
