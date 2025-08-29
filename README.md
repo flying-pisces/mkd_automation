@@ -7,6 +7,64 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
 ![Status](https://img.shields.io/badge/Status-In%20Development-orange.svg)
 
+---
+
+<div align="center">
+
+# 💖 SPONSOR THIS PROJECT 💖
+
+### 🚨 **Support Open Source Automation** 🚨
+
+<table>
+<tr>
+<td align="center" width="25%">
+<h3>🌟 Automation Supporter</h3>
+<h2>$4.99/month</h2>
+<p>✅ Digital sponsor badge<br/>
+✅ Monthly updates<br/>
+✅ Discord access</p>
+</td>
+<td align="center" width="25%" style="background-color: #f0f8ff;">
+<h3>🔧 Automation Enthusiast</h3>
+<h2>$19.99/month</h2>
+<p>✅ Everything above +<br/>
+✅ <strong>Advanced automation scripts</strong><br/>
+✅ Early access releases</p>
+</td>
+<td align="center" width="25%" style="background-color: #fff8dc;">
+<h3>💼 Professional Developer</h3>
+<h2>$99.99/month</h2>
+<p>✅ Everything above +<br/>
+✅ <strong>1-hour monthly consultation</strong><br/>
+✅ Logo placement</p>
+</td>
+<td align="center" width="25%" style="background-color: #f0fff0;">
+<h3>🚀 Innovation Sponsor</h3>
+<h2>$999.99/month</h2>
+<p>✅ Everything above +<br/>
+✅ <strong>Custom automation solutions</strong><br/>
+✅ Priority development</p>
+</td>
+</tr>
+</table>
+
+## 🎯 [**BECOME A SPONSOR NOW**](https://github.com/sponsors/cyin) 🎯
+
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-GitHub-red?style=for-the-badge&logo=github)](https://github.com/sponsors/cyin)
+[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/yinye0)
+[![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/flyingpisces)
+
+### 💡 **Why Sponsor?**
+- 🔬 **Open Source Automation** • **Growing Community** • **Professional Tool Development**
+- 🎯 **Your funding directly develops new automation features**
+- 🏆 **Join companies supporting open source automation tools**
+
+[📋 **VIEW ALL SPONSOR TIERS & BENEFITS**](SPONSORS.md)
+
+</div>
+
+---
+
 ## 🚀 Overview
 
 MKD Automation is a cross-platform desktop application designed for design engineers and automation professionals who need to capture, analyze, and reproduce complex user interactions. Whether you're testing GUI applications, creating demos, or automating repetitive tasks, MKD provides an intuitive solution for recording and playing back mouse movements, keyboard inputs, and display actions.
