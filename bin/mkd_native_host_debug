@@ -1,0 +1,14 @@
+#!/bin/bash
+echo "Debug: Native host script started" >> /Users/cyin/.mkd/debug.log
+echo "Debug: Working directory: $(pwd)" >> /Users/cyin/.mkd/debug.log
+echo "Debug: PATH: $PATH" >> /Users/cyin/.mkd/debug.log
+echo "Debug: Python3 location: $(which python3)" >> /Users/cyin/.mkd/debug.log
+
+cd "/Users/cyin/project/mkd_automation"
+export PYTHONPATH="/Users/cyin/project/mkd_automation/src:$PYTHONPATH"
+
+echo "Debug: Changed to project directory: $(pwd)" >> /Users/cyin/.mkd/debug.log
+echo "Debug: PYTHONPATH: $PYTHONPATH" >> /Users/cyin/.mkd/debug.log
+echo "Debug: About to start Python script" >> /Users/cyin/.mkd/debug.log
+
+python3 -m mkd_v2.native_host.host "$@" 2>> /Users/cyin/.mkd/debug.log

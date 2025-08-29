@@ -1,0 +1,7 @@
+#!/bin/bash
+echo "Test wrapper started at $(date)" >> /Users/cyin/.mkd/test_wrapper.log
+echo "Working directory: $(pwd)" >> /Users/cyin/.mkd/test_wrapper.log
+echo "PATH: $PATH" >> /Users/cyin/.mkd/test_wrapper.log
+
+cd "/Users/cyin/project/mkd_automation"
+/usr/bin/python3 bin/test_host.py 2>> /Users/cyin/.mkd/test_wrapper.log

@@ -76,6 +76,7 @@ class MessageBroker:
         self._running = False
         self._lock = threading.RLock()
         self._event_loop = None
+        self._tasks = []
         
         # Message queues for async processing
         self._command_queue = asyncio.Queue()
@@ -113,14 +114,15 @@ class MessageBroker:
                 broker_thread.start()
                 
                 # Start async message processors
-                asyncio.run_coroutine_threadsafe(
+                task1 = asyncio.run_coroutine_threadsafe(
                     self._process_commands(),
                     self._event_loop
                 )
-                asyncio.run_coroutine_threadsafe(
+                task2 = asyncio.run_coroutine_threadsafe(
                     self._process_events(), 
                     self._event_loop
                 )
+                self._tasks.extend([task1, task2])
                 
                 logger.info("MessageBroker started successfully")
                 return True
@@ -139,6 +141,12 @@ class MessageBroker:
                 self._running = False
                 
                 if self._event_loop:
+                    for task in self._tasks:
+                        task.cancel()
+                    
+                    # Give tasks a moment to cancel
+                    time.sleep(0.1)
+
                     self._event_loop.call_soon_threadsafe(
                         self._event_loop.stop
                     )
@@ -158,6 +166,15 @@ class MessageBroker:
         except Exception as e:
             logger.error(f"Event loop error: {e}")
         finally:
+            # Gather all tasks and cancel them
+            tasks = asyncio.all_tasks(loop=self._event_loop)
+            for task in tasks:
+                task.cancel()
+            
+            # Wait for all tasks to be cancelled
+            group = asyncio.gather(*tasks, return_exceptions=True)
+            self._event_loop.run_until_complete(group)
+
             self._event_loop.close()
     
     async def _process_commands(self):
@@ -176,6 +193,8 @@ class MessageBroker:
                 
             except asyncio.TimeoutError:
                 continue
+            except asyncio.CancelledError:
+                break
             except Exception as e:
                 logger.error(f"Command processing error: {e}")
                 self.stats['errors_encountered'] += 1
@@ -196,6 +215,8 @@ class MessageBroker:
                 
             except asyncio.TimeoutError:
                 continue
+            except asyncio.CancelledError:
+                break
             except Exception as e:
                 logger.error(f"Event processing error: {e}")
                 self.stats['errors_encountered'] += 1

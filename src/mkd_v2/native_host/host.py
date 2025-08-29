@@ -96,12 +96,14 @@ class NativeHost:
     
     def _message_loop(self):
         """Main message processing loop."""
+        logger.info("Starting message loop")
         while self.running:
             try:
                 # Read message from Chrome extension
                 message = self._read_message()
                 if message is None:
                     # EOF or invalid message - extension disconnected
+                    logger.info("Received null message, exiting loop.")
                     break
                 
                 # Process message
@@ -117,6 +119,7 @@ class NativeHost:
                 logger.error(f"Error in message loop: {e}")
                 self._send_error_response(None, f"Message processing error: {e}")
         
+        logger.info("Exited message loop")
         self.stop()
     
     def _read_message(self) -> Optional[Dict[str, Any]]:
@@ -128,11 +131,14 @@ class NativeHost:
         """
         try:
             # Read message length (4 bytes, little endian)
+            logger.info("Waiting for message length...")
             raw_length = sys.stdin.buffer.read(4)
+            logger.info(f"Read raw_length: {raw_length}")
             if not raw_length or len(raw_length) != 4:
                 return None
             
             message_length = struct.unpack('=I', raw_length)[0]
+            logger.info(f"Message length: {message_length}")
             
             # Validate message length
             if message_length == 0 or message_length > 1024 * 1024:  # Max 1MB
@@ -379,23 +385,28 @@ def main():
     """Main entry point for native messaging host."""
     import argparse
     
+    # Setup logging
+    log_file = Path.home() / '.mkd' / 'native_host.log'
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler(sys.stderr)
+        ]
+    )
+    logger.info("--- Native Host Starting ---")
+
     parser = argparse.ArgumentParser(description='MKD Automation Native Messaging Host')
     parser.add_argument('--storage', type=str, help='Storage directory path')
     parser.add_argument('--debug', action='store_true', help='Enable debug logging')
     
     args = parser.parse_args()
     
-    # Setup logging
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(Path.home() / '.mkd' / 'native_host.log'),
-            logging.StreamHandler(sys.stderr)
-        ]
-    )
-    
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     # Create storage directory
     storage_path = Path(args.storage) if args.storage else Path.home() / '.mkd'
     storage_path.mkdir(parents=True, exist_ok=True)
@@ -407,7 +418,7 @@ def main():
     except KeyboardInterrupt:
         logger.info("Native host interrupted")
     except Exception as e:
-        logger.error(f"Native host failed: {e}")
+        logger.error(f"Native host failed: {e}", exc_info=True)
         sys.exit(1)
 
 
