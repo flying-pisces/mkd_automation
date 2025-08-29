@@ -1,6 +1,6 @@
 /**
  * Background Service Worker for MKD Automation Chrome Extension
- * 
+ *
  * Handles persistent functionality including:
  * - Native messaging coordination
  * - Global state management
@@ -18,27 +18,27 @@ class SimpleNativeMessagingHandler {
         this.messageId = 0;
         this.pendingRequests = new Map();
     }
-    
+
     async startRecording(config) {
         return this.sendMessage('START_RECORDING', config);
     }
-    
+
     async stopRecording(sessionId) {
         return this.sendMessage('STOP_RECORDING', { sessionId });
     }
-    
+
     async pauseRecording(sessionId) {
         return this.sendMessage('PAUSE_RECORDING', { sessionId });
     }
-    
+
     async resumeRecording(sessionId) {
         return this.sendMessage('RESUME_RECORDING', { sessionId });
     }
-    
+
     async getStatus() {
         return this.sendMessage('GET_STATUS', {});
     }
-    
+
     getConnectionStatus() {
         return {
             isConnected: this.isConnected,
@@ -46,7 +46,7 @@ class SimpleNativeMessagingHandler {
             lastError: this.lastError || null
         };
     }
-    
+
     async sendMessage(command, params = {}) {
         return new Promise((resolve, reject) => {
             const messageId = ++this.messageId;
@@ -56,20 +56,20 @@ class SimpleNativeMessagingHandler {
                 params: params,
                 timestamp: Date.now()
             };
-            
+
             try {
                 // Connect to native host if not already connected
                 if (!this.port || this.port.error) {
                     this.port = chrome.runtime.connectNative(this.hostName);
                     this.setupPortHandlers();
                 }
-                
+
                 // Store pending request
                 this.pendingRequests.set(messageId, { resolve, reject });
-                
+
                 // Send message
                 this.port.postMessage(message);
-                
+
                 // Set timeout for response
                 setTimeout(() => {
                     if (this.pendingRequests.has(messageId)) {
@@ -77,48 +77,48 @@ class SimpleNativeMessagingHandler {
                         reject(new Error('Request timeout'));
                     }
                 }, 10000); // 10 second timeout
-                
+
             } catch (error) {
                 reject(new Error(`Native messaging error: ${error.message}`));
             }
         });
     }
-    
+
     setupPortHandlers() {
         if (!this.port) return;
-        
+
         this.port.onMessage.addListener((response) => {
             const messageId = response.id;
             if (this.pendingRequests.has(messageId)) {
                 const { resolve, reject } = this.pendingRequests.get(messageId);
                 this.pendingRequests.delete(messageId);
-                
-                if (response.result.success) {
-                    resolve(response.result);
+
+                if (response.success) {
+                    resolve(response);
                 } else {
-                    reject(new Error(response.result.error));
+                    reject(new Error(response.error));
                 }
             }
         });
-        
+
         this.port.onDisconnect.addListener(() => {
             this.isConnected = false;
             this.lastError = chrome.runtime.lastError?.message || 'Connection lost';
-            
+
             // Reject all pending requests
             for (const [messageId, { reject }] of this.pendingRequests) {
                 reject(new Error('Native host disconnected'));
             }
             this.pendingRequests.clear();
-            
+
             console.warn('Native host disconnected:', this.lastError);
         });
-        
+
         // Mark as connected
         this.isConnected = true;
         this.lastError = null;
     }
-    
+
     cleanup() {
         if (this.port) {
             this.port.disconnect();
@@ -138,13 +138,13 @@ class MKDBackgroundService {
             sessionId: null,
             startTime: null
         };
-        
+
         this.initializeEventListeners();
         this.initializeKeyboardShortcuts();
-        
+
         console.log('MKD Automation background service initialized');
     }
-    
+
     /**
      * Initialize event listeners
      */
@@ -153,29 +153,29 @@ class MKDBackgroundService {
         chrome.runtime.onInstalled.addListener((details) => {
             this.handleInstall(details);
         });
-        
+
         // Handle messages from popup and content scripts
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             this.handleMessage(message, sender, sendResponse);
             return true; // Keep channel open for async responses
         });
-        
+
         // Handle extension unload
         chrome.runtime.onSuspend.addListener(() => {
             this.handleSuspend();
         });
-        
+
         // Handle tab updates for context tracking
         chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             this.handleTabUpdate(tabId, changeInfo, tab);
         });
-        
+
         // Handle tab activation
         chrome.tabs.onActivated.addListener((activeInfo) => {
             this.handleTabActivated(activeInfo);
         });
     }
-    
+
     /**
      * Initialize keyboard shortcuts
      */
@@ -184,19 +184,19 @@ class MKDBackgroundService {
             this.handleCommand(command);
         });
     }
-    
+
     /**
      * Handle extension installation
      */
     handleInstall(details) {
         console.log('MKD Automation installed:', details);
-        
+
         // Set initial badge
         this.updateBadge('', '#808080');
-        
+
         // Check native host availability
         this.checkNativeHostAvailability();
-        
+
         if (details.reason === 'install') {
             // First time installation
             this.showWelcomeNotification();
@@ -205,45 +205,45 @@ class MKDBackgroundService {
             console.log(`Updated from ${details.previousVersion} to ${chrome.runtime.getManifest().version}`);
         }
     }
-    
+
     /**
      * Handle messages from other parts of the extension
      */
     async handleMessage(message, sender, sendResponse) {
         console.log('Background received message:', message.type);
-        
+
         try {
             switch (message.type) {
                 case 'START_RECORDING':
                     const startResult = await this.startRecording(message.config);
                     sendResponse({ success: true, data: startResult });
                     break;
-                    
+
                 case 'STOP_RECORDING':
                     const stopResult = await this.stopRecording();
                     sendResponse({ success: true, data: stopResult });
                     break;
-                    
+
                 case 'PAUSE_RECORDING':
                     const pauseResult = await this.pauseRecording();
                     sendResponse({ success: true, data: pauseResult });
                     break;
-                    
+
                 case 'RESUME_RECORDING':
                     const resumeResult = await this.resumeRecording();
                     sendResponse({ success: true, data: resumeResult });
                     break;
-                    
+
                 case 'GET_STATUS':
                     const status = await this.getStatus();
                     sendResponse({ success: true, data: status });
                     break;
-                    
+
                 case 'GET_CONNECTION_STATUS':
                     const connectionStatus = this.nativeMessaging.getConnectionStatus();
                     sendResponse({ success: true, data: connectionStatus });
                     break;
-                    
+
                 default:
                     console.warn('Unknown message type:', message.type);
                     sendResponse({ success: false, error: 'Unknown message type' });
@@ -253,15 +253,15 @@ class MKDBackgroundService {
             sendResponse({ success: false, error: error.message });
         }
     }
-    
+
     /**
      * Handle keyboard commands
      */
     async handleCommand(command) {
         console.log('Keyboard command:', command);
-        
+
         switch (command) {
-            case 'stop_recording':
+            case 'toggle-recording':
                 if (this.recordingState.isRecording) {
                     try {
                         await this.stopRecording();
@@ -270,14 +270,22 @@ class MKDBackgroundService {
                         console.error('Failed to stop recording via shortcut:', error);
                         this.showNotification('Failed to stop recording', 'error');
                     }
+                } else {
+                    try {
+                        await this.startRecording();
+                        this.showNotification('Recording started via keyboard shortcut');
+                    } catch (error) {
+                        console.error('Failed to start recording via shortcut:', error);
+                        this.showNotification('Failed to start recording', 'error');
+                    }
                 }
                 break;
-                
+
             default:
                 console.warn('Unknown command:', command);
         }
     }
-    
+
     /**
      * Start recording
      */
@@ -285,36 +293,36 @@ class MKDBackgroundService {
         if (this.recordingState.isRecording) {
             throw new Error('Recording already in progress');
         }
-        
+
         try {
             const result = await this.nativeMessaging.startRecording(config);
-            
+
             this.recordingState = {
                 isRecording: true,
                 isPaused: false,
                 sessionId: result.sessionId,
                 startTime: Date.now()
             };
-            
+
             this.currentSession = result;
             this.updateBadge('REC', '#FF0000');
-            
+
             // Notify all tabs about recording start
             this.broadcastToTabs({
                 type: 'RECORDING_STARTED',
                 sessionId: result.sessionId
             });
-            
+
             console.log('Recording started:', result.sessionId);
             return result;
-            
+
         } catch (error) {
             console.error('Failed to start recording:', error);
             this.updateBadge('ERR', '#FF8800');
             throw error;
         }
     }
-    
+
     /**
      * Stop recording
      */
@@ -322,36 +330,36 @@ class MKDBackgroundService {
         if (!this.recordingState.isRecording) {
             throw new Error('No active recording to stop');
         }
-        
+
         try {
             const result = await this.nativeMessaging.stopRecording(this.recordingState.sessionId);
-            
+
             this.recordingState = {
                 isRecording: false,
                 isPaused: false,
                 sessionId: null,
                 startTime: null
             };
-            
+
             this.currentSession = null;
             this.updateBadge('', '#808080');
-            
+
             // Notify all tabs about recording stop
             this.broadcastToTabs({
                 type: 'RECORDING_STOPPED',
                 result: result
             });
-            
+
             console.log('Recording stopped:', result);
             return result;
-            
+
         } catch (error) {
             console.error('Failed to stop recording:', error);
             this.updateBadge('ERR', '#FF8800');
             throw error;
         }
     }
-    
+
     /**
      * Pause recording
      */
@@ -359,25 +367,25 @@ class MKDBackgroundService {
         if (!this.recordingState.isRecording || this.recordingState.isPaused) {
             throw new Error('No active recording to pause');
         }
-        
+
         try {
             const result = await this.nativeMessaging.pauseRecording(this.recordingState.sessionId);
-            
+
             this.recordingState.isPaused = true;
             this.updateBadge('PAU', '#FF8800');
-            
+
             this.broadcastToTabs({
                 type: 'RECORDING_PAUSED'
             });
-            
+
             return result;
-            
+
         } catch (error) {
             console.error('Failed to pause recording:', error);
             throw error;
         }
     }
-    
+
     /**
      * Resume recording
      */
@@ -385,25 +393,25 @@ class MKDBackgroundService {
         if (!this.recordingState.isRecording || !this.recordingState.isPaused) {
             throw new Error('No paused recording to resume');
         }
-        
+
         try {
             const result = await this.nativeMessaging.resumeRecording(this.recordingState.sessionId);
-            
+
             this.recordingState.isPaused = false;
             this.updateBadge('REC', '#FF0000');
-            
+
             this.broadcastToTabs({
                 type: 'RECORDING_RESUMED'
             });
-            
+
             return result;
-            
+
         } catch (error) {
             console.error('Failed to resume recording:', error);
             throw error;
         }
     }
-    
+
     /**
      * Get current status
      */
@@ -411,14 +419,14 @@ class MKDBackgroundService {
         try {
             const nativeStatus = await this.nativeMessaging.getStatus();
             const connectionStatus = this.nativeMessaging.getConnectionStatus();
-            
+
             return {
                 recording: this.recordingState,
                 session: this.currentSession,
                 connection: connectionStatus,
                 native: nativeStatus
             };
-            
+
         } catch (error) {
             console.error('Failed to get status:', error);
             return {
@@ -430,7 +438,7 @@ class MKDBackgroundService {
             };
         }
     }
-    
+
     /**
      * Update extension badge
      */
@@ -438,7 +446,7 @@ class MKDBackgroundService {
         chrome.action.setBadgeText({ text: text });
         chrome.action.setBadgeBackgroundColor({ color: color });
     }
-    
+
     /**
      * Broadcast message to all tabs
      */
@@ -454,7 +462,7 @@ class MKDBackgroundService {
             console.error('Failed to broadcast to tabs:', error);
         }
     }
-    
+
     /**
      * Show notification to user
      */
@@ -462,14 +470,14 @@ class MKDBackgroundService {
         console.log(`[${type.toUpperCase()}] ${message}`);
         // Note: Notifications require permission in manifest
     }
-    
+
     /**
      * Show welcome notification on first install
      */
     showWelcomeNotification() {
         console.log('MKD Automation installed successfully! Click the extension icon to start recording.');
     }
-    
+
     /**
      * Check native host availability
      */
@@ -483,7 +491,7 @@ class MKDBackgroundService {
             this.updateBadge('!', '#FF8800');
         }
     }
-    
+
     /**
      * Handle tab updates
      */
@@ -500,7 +508,7 @@ class MKDBackgroundService {
             });
         }
     }
-    
+
     /**
      * Handle tab activation
      */
@@ -518,16 +526,16 @@ class MKDBackgroundService {
             });
         }
     }
-    
+
     /**
      * Handle extension suspend
      */
     handleSuspend() {
         console.log('Extension suspending...');
-        
+
         // Clean up native messaging
         this.nativeMessaging.cleanup();
-        
+
         // If recording is active, try to save state
         if (this.recordingState.isRecording) {
             console.warn('Extension suspending during active recording');
