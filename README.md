@@ -48,10 +48,10 @@
 </tr>
 </table>
 
-## 🎯 [**BECOME A SPONSOR NOW**](https://github.com/sponsors/cyin) 🎯
+## 🎯 [**BECOME A SPONSOR NOW**](https://github.com/sponsors/flying-pisces) 🎯
 
-[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-GitHub-red?style=for-the-badge&logo=github)](https://github.com/sponsors/cyin)
-[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/yinye0)
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-GitHub-red?style=for-the-badge&logo=github)](https://github.com/sponsors/flying-pisces)
+[![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/yinye0)
 [![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/flyingpisces)
 
 ### 💡 **Why Sponsor?**
