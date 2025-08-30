@@ -29,8 +29,8 @@
         
         <!-- Recording Controls -->
         <div class="controls-section">
-            <!-- Start/Stop Button -->
-            <div class="main-control">
+            <!-- Main control row -->
+            <div class="main-control-row">
                 <button id="startStopButton" class="control-button start-button" disabled>
                     <div class="button-icon" id="buttonIcon">
                         <svg class="play-icon" viewBox="0 0 24 24">
@@ -38,6 +38,14 @@
                         </svg>
                     </div>
                     <span class="button-text" id="buttonText">Start Recording</span>
+                </button>
+                <button id="startPlaybackButton" class="control-button playback-button" disabled>
+                    <div class="button-icon">
+                        <svg class="playback-icon" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                    <span class="button-text">Start Playback</span>
                 </button>
             </div>
             
@@ -53,6 +61,15 @@
             </div>
         </div>
         
+        <!-- Recent Recordings -->
+        <div class="recent-recordings-section" id="recentRecordingsSection">
+            <h2>Recent Recordings</h2>
+            <div id="recentRecordingsList" class="recordings-list">
+                <!-- Recordings will be listed here -->
+                <div class="empty-list-message">No recent recordings found.</div>
+            </div>
+        </div>
+
         <!-- Recording Information -->
         <div class="info-section" id="infoSection" style="display: none;">
             <div class="info-item">

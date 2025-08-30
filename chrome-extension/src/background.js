@@ -9,17 +9,161 @@
  * - Extension lifecycle events
  */
 
-// Simple native messaging handler for Week 1
-class SimpleNativeMessagingHandler {
+class NativeMessagingHandler {
     constructor() {
-        this.hostName = 'com.mkd.automation';
-        this.port = null;
-        this.isConnected = false;
+        this.nativeHostName = 'com.mkd.automation';
         this.messageId = 0;
-        this.pendingRequests = new Map();
+        this.pendingMessages = new Map();
+        this.connectionTimeout = 30000; // 30 seconds
+        this.isConnected = false;
+        this.lastError = null;
+        
+        // Initialize connection monitoring
+        this.initializeConnectionMonitoring();
     }
     
-    async startRecording(config) {
+    /**
+     * Initialize connection monitoring and health checks
+     */
+    initializeConnectionMonitoring() {
+        // Check connection health every 30 seconds
+        setInterval(() => {
+            this.checkConnectionHealth();
+        }, 30000);
+    }
+    
+    /**
+     * Generate unique message ID
+     */
+    generateMessageId() {
+        return `msg_${Date.now()}_${++this.messageId}`;
+    }
+    
+    /**
+     * Send message to native host
+     * @param {string} command - Command to execute
+     * @param {Object} params - Command parameters
+     * @returns {Promise<Object>} Response from native host
+     */
+    async sendMessage(command, params = {}) {
+        return new Promise((resolve, reject) => {
+            const messageId = this.generateMessageId();
+            const message = {
+                id: messageId,
+                command: command,
+                params: params,
+                timestamp: Date.now()
+            };
+            
+            // Set up timeout
+            const timeoutId = setTimeout(() => {
+                this.pendingMessages.delete(messageId);
+                reject(new Error(`Message timeout after ${this.connectionTimeout}ms`));
+            }, this.connectionTimeout);
+            
+            // Store pending message
+            this.pendingMessages.set(messageId, {
+                resolve,
+                reject,
+                timeoutId,
+                timestamp: Date.now()
+            });
+            
+            try {
+                // Send message to native host
+                chrome.runtime.sendNativeMessage(
+                    this.nativeHostName,
+                    message,
+                    (response) => {
+                        this.handleNativeResponse(messageId, response);
+                    }
+                );
+            } catch (error) {
+                this.handleMessageError(messageId, error);
+            }
+        });
+    }
+    
+    /**
+     * Handle response from native host
+     * @param {string} messageId - Message ID
+     * @param {Object} response - Response from native host
+     */
+    handleNativeResponse(messageId, response) {
+        const pendingMessage = this.pendingMessages.get(messageId);
+        if (!pendingMessage) {
+            console.warn('Received response for unknown message:', messageId);
+            return;
+        }
+        
+        // Clear timeout
+        clearTimeout(pendingMessage.timeoutId);
+        this.pendingMessages.delete(messageId);
+        
+        // Check for Chrome runtime error
+        if (chrome.runtime.lastError) {
+            this.lastError = chrome.runtime.lastError.message;
+            this.isConnected = false;
+            pendingMessage.reject(new Error(chrome.runtime.lastError.message));
+            return;
+        }
+        
+        // Check if response is valid
+        if (!response) {
+            this.isConnected = false;
+            pendingMessage.reject(new Error('No response received from native host'));
+            return;
+        }
+        
+        // Update connection status
+        this.isConnected = true;
+        this.lastError = null;
+        
+        // Handle response based on status
+        if (response.status === 'SUCCESS') {
+            pendingMessage.resolve(response.data);
+        } else if (response.status === 'ERROR') {
+            pendingMessage.reject(new Error(response.error || 'Unknown error'));
+        } else {
+            pendingMessage.reject(new Error(`Invalid response status: ${response.status}`));
+        }
+    }
+    
+    /**
+     * Handle message sending error
+     * @param {string} messageId - Message ID
+     * @param {Error} error - Error object
+     */
+    handleMessageError(messageId, error) {
+        const pendingMessage = this.pendingMessages.get(messageId);
+        if (!pendingMessage) {
+            return;
+        }
+        
+        clearTimeout(pendingMessage.timeoutId);
+        this.pendingMessages.delete(messageId);
+        
+        this.isConnected = false;
+        this.lastError = error.message;
+        
+        pendingMessage.reject(error);
+    }
+    
+    /**
+     * Check connection health with native host
+     */
+    async checkConnectionHealth() {
+        try {
+            await this.getStatus();
+            console.log('Native host connection healthy');
+        } catch (error) {
+            console.error('Native host connection health check failed:', error);
+            this.isConnected = false;
+            this.lastError = error.message;
+        }
+    }
+
+    async startRecording(config = {}) {
         return this.sendMessage('START_RECORDING', config);
     }
     
@@ -34,103 +178,56 @@ class SimpleNativeMessagingHandler {
     async resumeRecording(sessionId) {
         return this.sendMessage('RESUME_RECORDING', { sessionId });
     }
+
+    async startPlayback(recordingId) {
+        console.log(`Starting playback for recording ID: ${recordingId}`);
+        // This is a placeholder for the actual implementation
+        return this.sendMessage('START_PLAYBACK', { recordingId });
+    }
+
+    async getRecentRecordings() {
+        // This is a placeholder for the actual implementation
+        return Promise.resolve([
+            { id: 'rec-1', name: 'Login Flow', date: '2025-08-28' },
+            { id: 'rec-2', name: 'Signup Form', date: '2025-08-27' },
+            { id: 'rec-3', name: 'Checkout Process', date: '2025-08-26' },
+        ]);
+    }
     
     async getStatus() {
         return this.sendMessage('GET_STATUS', {});
     }
     
+    /**
+     * Get connection status
+     * @returns {Object} Connection information
+     */
     getConnectionStatus() {
         return {
             isConnected: this.isConnected,
-            hostName: this.hostName,
-            lastError: this.lastError || null
+            lastError: this.lastError,
+            pendingMessages: this.pendingMessages.size
         };
     }
     
-    async sendMessage(command, params = {}) {
-        return new Promise((resolve, reject) => {
-            const messageId = ++this.messageId;
-            const message = {
-                id: messageId,
-                command: command,
-                params: params,
-                timestamp: Date.now()
-            };
-            
-            try {
-                // Connect to native host if not already connected
-                if (!this.port || this.port.error) {
-                    this.port = chrome.runtime.connectNative(this.hostName);
-                    this.setupPortHandlers();
-                }
-                
-                // Store pending request
-                this.pendingRequests.set(messageId, { resolve, reject });
-                
-                // Send message
-                this.port.postMessage(message);
-                
-                // Set timeout for response
-                setTimeout(() => {
-                    if (this.pendingRequests.has(messageId)) {
-                        this.pendingRequests.delete(messageId);
-                        reject(new Error('Request timeout'));
-                    }
-                }, 10000); // 10 second timeout
-                
-            } catch (error) {
-                reject(new Error(`Native messaging error: ${error.message}`));
-            }
-        });
-    }
-    
-    setupPortHandlers() {
-        if (!this.port) return;
-        
-        this.port.onMessage.addListener((response) => {
-            const messageId = response.id;
-            if (this.pendingRequests.has(messageId)) {
-                const { resolve, reject } = this.pendingRequests.get(messageId);
-                this.pendingRequests.delete(messageId);
-                
-                if (response.result.success) {
-                    resolve(response.result);
-                } else {
-                    reject(new Error(response.result.error));
-                }
-            }
-        });
-        
-        this.port.onDisconnect.addListener(() => {
-            this.isConnected = false;
-            this.lastError = chrome.runtime.lastError?.message || 'Connection lost';
-            
-            // Reject all pending requests
-            for (const [messageId, { reject }] of this.pendingRequests) {
-                reject(new Error('Native host disconnected'));
-            }
-            this.pendingRequests.clear();
-            
-            console.warn('Native host disconnected:', this.lastError);
-        });
-        
-        // Mark as connected
-        this.isConnected = true;
-        this.lastError = null;
-    }
-    
+    /**
+     * Clean up pending messages (for shutdown)
+     */
     cleanup() {
-        if (this.port) {
-            this.port.disconnect();
-            this.port = null;
+        // Reject all pending messages
+        for (const [messageId, pendingMessage] of this.pendingMessages) {
+            clearTimeout(pendingMessage.timeoutId);
+            pendingMessage.reject(new Error('Extension shutting down'));
         }
+        this.pendingMessages.clear();
+        
         this.isConnected = false;
     }
 }
 
 class MKDBackgroundService {
     constructor() {
-        this.nativeMessaging = new SimpleNativeMessagingHandler();
+        this.nativeMessaging = new NativeMessagingHandler();
         this.currentSession = null;
         this.recordingState = {
             isRecording: false,
@@ -232,6 +329,16 @@ class MKDBackgroundService {
                 case 'RESUME_RECORDING':
                     const resumeResult = await this.resumeRecording();
                     sendResponse({ success: true, data: resumeResult });
+                    break;
+
+                case 'START_PLAYBACK':
+                    const playbackResult = await this.startPlayback(message.recordingId);
+                    sendResponse({ success: true, data: playbackResult });
+                    break;
+
+                case 'GET_RECENT_RECORDINGS':
+                    const recordings = await this.nativeMessaging.getRecentRecordings();
+                    sendResponse({ success: true, data: recordings });
                     break;
                     
                 case 'GET_STATUS':
@@ -347,6 +454,21 @@ class MKDBackgroundService {
             
         } catch (error) {
             console.error('Failed to stop recording:', error);
+            this.updateBadge('ERR', '#FF8800');
+            throw error;
+        }
+    }
+
+    /**
+     * Start playback
+     */
+    async startPlayback(recordingId) {
+        try {
+            const result = await this.nativeMessaging.startPlayback(recordingId);
+            this.updateBadge('PLAY', '#3498db');
+            return result;
+        } catch (error) {
+            console.error('Failed to start playback:', error);
             this.updateBadge('ERR', '#FF8800');
             throw error;
         }

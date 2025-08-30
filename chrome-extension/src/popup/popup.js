@@ -17,6 +17,7 @@ class MKDPopupController {
         this.initializeEventListeners();
         this.loadSettings();
         this.updateStatus();
+        this.loadRecentRecordings();
         
         console.log('MKD Popup Controller initialized');
     }
@@ -34,6 +35,7 @@ class MKDPopupController {
         
         // Control elements
         this.startStopButton = document.getElementById('startStopButton');
+        this.startPlaybackButton = document.getElementById('startPlaybackButton');
         this.buttonIcon = document.getElementById('buttonIcon');
         this.buttonText = document.getElementById('buttonText');
         this.secondaryControls = document.getElementById('secondaryControls');
@@ -45,6 +47,9 @@ class MKDPopupController {
         this.sessionIdText = document.getElementById('sessionIdText');
         this.eventsCountText = document.getElementById('eventsCountText');
         
+        // Recent Recordings
+        this.recentRecordingsList = document.getElementById('recentRecordingsList');
+
         // Settings elements
         this.settingsToggle = document.getElementById('settingsToggle');
         this.settingsPanel = document.getElementById('settingsPanel');
@@ -68,6 +73,11 @@ class MKDPopupController {
         // Main control button
         this.startStopButton.addEventListener('click', () => {
             this.handleStartStopClick();
+        });
+
+        // Playback button
+        this.startPlaybackButton.addEventListener('click', () => {
+            this.handleStartPlaybackClick();
         });
         
         // Pause/Resume button
@@ -118,9 +128,41 @@ class MKDPopupController {
             }
         } catch (error) {
             console.error('Start/Stop action failed:', error);
-            this.showError(error.message);
+            this.showError(`Failed to ${this.isRecording ? 'stop' : 'start'} recording: ${error.message}`);
         } finally {
             this.startStopButton.disabled = false;
+        }
+    }
+
+    /**
+     * Handle start playback button click
+     */
+    async handleStartPlaybackClick() {
+        this.startPlaybackButton.disabled = true;
+        try {
+            const selectedRecording = this.recentRecordingsList.querySelector('input[name="recording"]:checked');
+            if (!selectedRecording) {
+                this.showError('Please select a recording to play.');
+                return;
+            }
+
+            const recordingId = selectedRecording.value;
+            console.log(`Start Playback clicked for recording: ${recordingId}`);
+
+            const response = await this.sendMessageToBackground({
+                type: 'START_PLAYBACK',
+                recordingId: recordingId,
+            });
+
+            if (!response.success) {
+                throw new Error(response.error);
+            }
+
+        } catch (error) {
+            console.error('Start Playback action failed:', error);
+            this.showError(`Failed to start playback: ${error.message}`);
+        } finally {
+            this.startPlaybackButton.disabled = false;
         }
     }
     
@@ -138,7 +180,7 @@ class MKDPopupController {
             }
         } catch (error) {
             console.error('Pause/Resume action failed:', error);
-            this.showError(error.message);
+            this.showError(`Failed to ${this.isPaused ? 'resume' : 'pause'} recording: ${error.message}`);
         } finally {
             this.pauseResumeButton.disabled = false;
         }
@@ -238,6 +280,7 @@ class MKDPopupController {
         
         // Show success message
         this.showSuccess(`Recording saved: ${data.filePath || 'Unknown location'}`);
+        this.loadRecentRecordings();
         
         console.log('Recording stopped:', data);
     }
@@ -374,6 +417,39 @@ class MKDPopupController {
         this.infoSection.style.display = 'none';
         this.durationText.textContent = '00:00:00';
     }
+
+    /**
+     * Load recent recordings
+     */
+    async loadRecentRecordings() {
+        try {
+            const response = await this.sendMessageToBackground({ type: 'GET_RECENT_RECORDINGS' });
+            if (response.success) {
+                this.renderRecentRecordings(response.data);
+            } else {
+                this.showError(`Could not load recent recordings: ${response.error}`);
+            }
+        } catch (error) {
+            this.showError(error.message);
+        }
+    }
+
+    /**
+     * Render recent recordings in the UI
+     */
+    renderRecentRecordings(recordings) {
+        if (recordings && recordings.length > 0) {
+            this.recentRecordingsList.innerHTML = recordings.map((rec, index) => `
+                <div class="recording-item">
+                    <input type="radio" id="rec-${rec.id}" name="recording" value="${rec.id}" ${index === 0 ? 'checked' : ''}>
+                    <label for="rec-${rec.id}">${rec.name}</label>
+                    <span>${rec.date}</span>
+                </div>
+            `).join('');
+        } else {
+            this.recentRecordingsList.innerHTML = '<div class="empty-list-message">No recent recordings found.</div>';
+        }
+    }
     
     /**
      * Toggle settings panel
@@ -414,6 +490,7 @@ class MKDPopupController {
             
         } catch (error) {
             console.error('Failed to load settings:', error);
+            this.showError('Failed to load settings.');
         }
     }
     
@@ -427,6 +504,7 @@ class MKDPopupController {
             console.log('Settings saved:', settings);
         } catch (error) {
             console.error('Failed to save settings:', error);
+            this.showError('Failed to save settings.');
         }
     }
     
@@ -441,6 +519,8 @@ class MKDPopupController {
             
             if (response.success) {
                 this.handleStatusUpdate(response.data);
+            } else {
+                this.updateConnectionStatus(false, response.error);
             }
         } catch (error) {
             console.error('Failed to get status:', error);
@@ -486,6 +566,7 @@ class MKDPopupController {
         
         // Enable/disable controls based on connection
         this.startStopButton.disabled = !isConnected;
+        this.startPlaybackButton.disabled = !isConnected;
     }
     
     /**
@@ -496,8 +577,10 @@ class MKDPopupController {
         
         if (isConnected) {
             this.connectionText.textContent = 'Connected to native host';
+            this.statusDot.classList.remove('disconnected');
         } else {
-            this.connectionText.textContent = `Disconnected${errorMessage ? ': ' + errorMessage : ''}`;
+            this.connectionText.textContent = `Disconnected: ${errorMessage || 'Check native host installation'}`;
+            this.statusDot.classList.add('disconnected');
         }
     }
     
@@ -532,7 +615,11 @@ class MKDPopupController {
     async sendMessageToBackground(message) {
         return new Promise((resolve) => {
             chrome.runtime.sendMessage(message, (response) => {
-                resolve(response || { success: false, error: 'No response' });
+                if (chrome.runtime.lastError) {
+                    resolve({ success: false, error: chrome.runtime.lastError.message });
+                } else {
+                    resolve(response || { success: false, error: 'No response from background script' });
+                }
             });
         });
     }

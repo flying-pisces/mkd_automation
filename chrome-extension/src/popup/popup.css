@@ -105,8 +105,9 @@ body {
     margin-bottom: 20px;
 }
 
-.main-control {
-    text-align: center;
+.main-control-row {
+    display: flex;
+    gap: 10px;
     margin-bottom: 15px;
 }
 
@@ -118,7 +119,7 @@ body {
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 12px 20px;
+    padding: 12px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -128,7 +129,6 @@ body {
 }
 
 .control-button:hover:not(:disabled) {
-    background: #5a67d8;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
@@ -160,6 +160,15 @@ body {
     box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
 }
 
+.playback-button {
+    background: #3498db;
+}
+
+.playback-button:hover:not(:disabled) {
+    background: #2980b9;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
 .pause-button {
     background: #f39c12;
     width: 100%;
@@ -183,7 +192,7 @@ body {
     fill: currentColor;
 }
 
-.play-icon, .stop-icon, .pause-icon {
+.play-icon, .stop-icon, .pause-icon, .playback-icon {
     transition: transform 0.2s ease;
 }
 
@@ -200,6 +209,32 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Recent Recordings Section */
+.recent-recordings-section {
+    margin-bottom: 20px;
+}
+
+.recent-recordings-section h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.recordings-list {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.empty-list-message {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 20px 0;
 }
 
 /* Info Section */
