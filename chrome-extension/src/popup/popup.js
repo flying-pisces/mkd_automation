@@ -4,6 +4,18 @@
  * Handles all popup UI interactions and state management.
  */
 
+// Load debug logger
+const script = document.createElement('script');
+script.src = '../debug/debug_logger.js';
+document.head.appendChild(script);
+
+// Wait for logger to load
+setTimeout(() => {
+    if (typeof debugLogger !== 'undefined') {
+        debugLogger.info('Popup script loaded with debug logging');
+    }
+}, 100);
+
 class MKDPopupController {
     constructor() {
         this.isRecording = false;
@@ -17,6 +29,10 @@ class MKDPopupController {
         this.fallbackMode = false;
         this.fallbackReason = null;
         
+        // Visual feedback
+        this.toastQueue = [];
+        this.isShowingToast = false;
+        
         this.initializeElements();
         this.initializeEventListeners();
         this.loadSettings();
@@ -26,7 +42,10 @@ class MKDPopupController {
         // Listen for fallback mode changes
         this.initializeFallbackHandling();
         
-        console.log('MKD Popup Controller initialized');
+        // Add visual enhancements
+        this.enhanceVisualFeedback();
+        
+        // console.log('MKD Popup Controller initialized');  // Commented for production
     }
     
     /**
@@ -154,7 +173,7 @@ class MKDPopupController {
             }
 
             const recordingId = selectedRecording.value;
-            console.log(`Start Playback clicked for recording: ${recordingId}`);
+            // console.log(`Start Playback clicked for recording: ${recordingId}`);  // Commented for production
 
             const response = await this.sendMessageToBackground({
                 type: 'START_PLAYBACK',
@@ -269,7 +288,7 @@ class MKDPopupController {
         this.startTimer();
         this.showInfo();
         
-        console.log('Recording started:', data);
+        // console.log('Recording started:', data);  // Commented for production
     }
     
     /**
@@ -289,7 +308,7 @@ class MKDPopupController {
         this.showSuccess(`Recording saved: ${data.filePath || 'Unknown location'}`);
         this.loadRecentRecordings();
         
-        console.log('Recording stopped:', data);
+        // console.log('Recording stopped:', data);  // Commented for production
     }
     
     /**
@@ -341,11 +360,11 @@ class MKDPopupController {
         
         // Update secondary controls
         if (this.isRecording) {
-            this.secondaryControls.style.display = 'block';
+            this.secondaryControls.classList.remove('hidden');
             
             this.updatePauseResumeButton();
         } else {
-            this.secondaryControls.style.display = 'none';
+            this.secondaryControls.classList.add('hidden');
         }
     }
     
@@ -389,7 +408,7 @@ class MKDPopupController {
      * Show info section
      */
     showInfo() {
-        this.infoSection.style.display = 'block';
+        this.infoSection.classList.remove('hidden');
         this.sessionIdText.textContent = this.sessionId || '-';
         this.eventsCountText.textContent = '0'; // Will be updated via status calls
     }
@@ -398,7 +417,7 @@ class MKDPopupController {
      * Hide info section
      */
     hideInfo() {
-        this.infoSection.style.display = 'none';
+        this.infoSection.classList.add('hidden');
         this.durationText.textContent = '00:00:00';
     }
 
@@ -443,7 +462,11 @@ class MKDPopupController {
      */
     toggleSettings() {
         this.settingsVisible = !this.settingsVisible;
-        this.settingsPanel.style.display = this.settingsVisible ? 'block' : 'none';
+        if (this.settingsVisible) {
+            this.settingsPanel.classList.remove('hidden');
+        } else {
+            this.settingsPanel.classList.add('hidden');
+        }
     }
     
     /**
@@ -488,7 +511,7 @@ class MKDPopupController {
         try {
             const settings = this.getRecordingConfig();
             await chrome.storage.local.set({ mkd_settings: settings });
-            console.log('Settings saved:', settings);
+            // console.log('Settings saved:', settings);  // Commented for production
         } catch (error) {
             console.error('Failed to save settings:', error);
             this.showError('Failed to save settings.');
@@ -514,7 +537,7 @@ class MKDPopupController {
         this.fallbackMode = inFallback;
         this.fallbackReason = reason;
         
-        console.log(`Fallback mode: ${inFallback}, reason: ${reason}`);
+        // console.log(`Fallback mode: ${inFallback}, reason: ${reason}`);  // Commented for production
         
         // Update UI to reflect fallback state
         this.updateFallbackUI();
@@ -590,7 +613,7 @@ class MKDPopupController {
             });
         }
         
-        fallbackMessage.style.display = 'block';
+        fallbackMessage.classList.remove('hidden');
     }
     
     /**
@@ -599,7 +622,7 @@ class MKDPopupController {
     hideFallbackMessage() {
         const fallbackMessage = document.getElementById('fallbackMessage');
         if (fallbackMessage) {
-            fallbackMessage.style.display = 'none';
+            fallbackMessage.classList.add('hidden');
         }
     }
     
@@ -723,7 +746,7 @@ class MKDPopupController {
      * Handle messages from background script
      */
     handleBackgroundMessage(message) {
-        console.log('Popup received message:', message.type);
+        // console.log('Popup received message:', message.type);  // Commented for production
         
         switch (message.type) {
             case 'RECORDING_STARTED':
@@ -764,6 +787,7 @@ class MKDPopupController {
      */
     showError(message) {
         this.errorMessage.textContent = message;
+        this.errorSection.classList.remove('hidden');
         this.errorSection.style.display = 'flex';
         
         // Auto-hide after 5 seconds
@@ -778,14 +802,14 @@ class MKDPopupController {
     showSuccess(message) {
         // For now, just log success messages
         // In a full implementation, you might want a success notification
-        console.log('Success:', message);
+        // console.log('Success:', message);  // Commented for production
     }
     
     /**
      * Hide error message
      */
     hideError() {
-        this.errorSection.style.display = 'none';
+        this.errorSection.classList.add('hidden');
         this.errorMessage.textContent = '';
     }
     
@@ -896,6 +920,278 @@ class MKDPopupController {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    /**
+     * Enhanced Visual Feedback Methods
+     */
+    enhanceVisualFeedback() {
+        // Add ripple effect to buttons
+        this.addRippleEffect();
+        
+        // Add smooth transitions
+        this.addStateTransitions();
+        
+        // Initialize toast container
+        this.initializeToast();
+        
+        // Add loading states
+        this.addLoadingStates();
+    }
+    
+    /**
+     * Add ripple effect to buttons
+     */
+    addRippleEffect() {
+        const buttons = document.querySelectorAll('.control-button');
+        buttons.forEach(button => {
+            button.classList.add('ripple');
+        });
+    }
+    
+    /**
+     * Add smooth state transitions
+     */
+    addStateTransitions() {
+        const elements = [
+            this.statusDot,
+            this.statusText,
+            this.startStopButton,
+            this.secondaryControls
+        ];
+        
+        elements.forEach(el => {
+            if (el) el.classList.add('state-transition');
+        });
+    }
+    
+    /**
+     * Initialize toast notification system
+     */
+    initializeToast() {
+        // Create toast container if it doesn't exist
+        if (!document.getElementById('toastContainer')) {
+            const toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            document.body.appendChild(toastContainer);
+        }
+    }
+    
+    /**
+     * Show toast notification
+     */
+    showToast(message, type = 'info', duration = 3000) {
+        this.toastQueue.push({ message, type, duration });
+        
+        if (!this.isShowingToast) {
+            this.processToastQueue();
+        }
+    }
+    
+    /**
+     * Process toast queue
+     */
+    async processToastQueue() {
+        if (this.toastQueue.length === 0) {
+            this.isShowingToast = false;
+            return;
+        }
+        
+        this.isShowingToast = true;
+        const { message, type, duration } = this.toastQueue.shift();
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        
+        const container = document.getElementById('toastContainer');
+        container.appendChild(toast);
+        
+        // Trigger animation
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        // Remove after duration
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+                this.processToastQueue();
+            }, 300);
+        }, duration);
+    }
+    
+    /**
+     * Add loading states to buttons
+     */
+    addLoadingStates() {
+        // Store original button content
+        this.originalButtonContent = new Map();
+    }
+    
+    /**
+     * Show button loading state
+     */
+    showButtonLoading(button) {
+        if (!button) return;
+        
+        // Store original content
+        this.originalButtonContent.set(button, button.innerHTML);
+        
+        // Add loading spinner
+        button.disabled = true;
+        button.innerHTML = '<div class="spinner"></div>';
+    }
+    
+    /**
+     * Hide button loading state
+     */
+    hideButtonLoading(button) {
+        if (!button || !this.originalButtonContent.has(button)) return;
+        
+        button.disabled = false;
+        button.innerHTML = this.originalButtonContent.get(button);
+        this.originalButtonContent.delete(button);
+    }
+    
+    /**
+     * Animate status change
+     */
+    animateStatusChange(newStatus) {
+        if (!this.statusDot) return;
+        
+        // Add pulse animation
+        this.statusDot.style.animation = 'none';
+        setTimeout(() => {
+            this.statusDot.style.animation = '';
+            
+            // Update status classes
+            this.statusDot.className = 'status-dot';
+            
+            switch (newStatus) {
+                case 'recording':
+                    this.statusDot.classList.add('recording', 'recording-pulse');
+                    break;
+                case 'paused':
+                    this.statusDot.classList.add('paused');
+                    break;
+                case 'ready':
+                    this.statusDot.classList.add('ready');
+                    break;
+                case 'disconnected':
+                    this.statusDot.classList.add('disconnected');
+                    break;
+                case 'error':
+                    this.statusDot.classList.add('error');
+                    break;
+            }
+        }, 10);
+    }
+    
+    /**
+     * Show success animation
+     */
+    showSuccessAnimation() {
+        const checkmark = document.createElement('div');
+        checkmark.className = 'success-checkmark';
+        checkmark.innerHTML = '✓';
+        checkmark.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: #27ae60;
+            z-index: 9999;
+        `;
+        
+        document.body.appendChild(checkmark);
+        
+        setTimeout(() => {
+            checkmark.style.opacity = '0';
+            checkmark.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => checkmark.remove(), 300);
+        }, 1000);
+    }
+    
+    /**
+     * Add progress bar for recording
+     */
+    showRecordingProgress() {
+        if (!document.getElementById('recordingProgress')) {
+            const progressBar = document.createElement('div');
+            progressBar.id = 'recordingProgress';
+            progressBar.className = 'progress-bar';
+            progressBar.innerHTML = '<div class="progress-fill" style="width: 0%"></div>';
+            
+            // Insert after status section
+            const statusSection = document.querySelector('.status-section');
+            if (statusSection) {
+                statusSection.appendChild(progressBar);
+            }
+        }
+    }
+    
+    /**
+     * Update recording progress
+     */
+    updateRecordingProgress(percentage) {
+        const progressFill = document.querySelector('#recordingProgress .progress-fill');
+        if (progressFill) {
+            progressFill.style.width = `${Math.min(100, percentage)}%`;
+        }
+    }
+    
+    /**
+     * Hide recording progress
+     */
+    hideRecordingProgress() {
+        const progressBar = document.getElementById('recordingProgress');
+        if (progressBar) {
+            progressBar.style.opacity = '0';
+            progressBar.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => progressBar.remove(), 300);
+        }
+    }
+    
+    /**
+     * Enhanced start recording with visual feedback
+     */
+    async startRecordingWithFeedback() {
+        this.showButtonLoading(this.startStopButton);
+        
+        try {
+            await this.startRecording();
+            this.showToast('Recording started', 'success');
+            this.animateStatusChange('recording');
+            this.showRecordingProgress();
+        } catch (error) {
+            this.showToast(`Failed to start: ${error.message}`, 'error');
+            this.animateStatusChange('error');
+        } finally {
+            this.hideButtonLoading(this.startStopButton);
+        }
+    }
+    
+    /**
+     * Enhanced stop recording with visual feedback
+     */
+    async stopRecordingWithFeedback() {
+        this.showButtonLoading(this.startStopButton);
+        
+        try {
+            const result = await this.stopRecording();
+            if (result && result.eventCount) {
+                this.showToast(`Recording saved: ${result.eventCount} events`, 'success');
+                this.showSuccessAnimation();
+            }
+            this.animateStatusChange('ready');
+            this.hideRecordingProgress();
+        } catch (error) {
+            this.showToast(`Failed to stop: ${error.message}`, 'error');
+            this.animateStatusChange('error');
+        } finally {
+            this.hideButtonLoading(this.startStopButton);
+        }
     }
 }
 

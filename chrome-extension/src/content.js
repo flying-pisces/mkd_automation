@@ -1,4 +1,4 @@
-console.log('MKD Automation content script loaded');
+// console.log('MKD Automation content script loaded');  // Commented for production
 
 /**
  * Content script security utilities
@@ -434,13 +434,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             case 'startRecording':
                 isRecording = true;
                 recordedActions = [];
-                console.log('Content script: Recording started');
+                // console.log('Content script: Recording started');  // Commented for production
                 sendResponse({ success: true });
                 break;
                 
             case 'stopRecording':
                 isRecording = false;
-                console.log(`Content script: Recording stopped, captured ${recordedActions.length} actions`);
+                // console.log(`Content script: Recording stopped, captured ${recordedActions.length} actions`);  // Commented for production
                 
                 // Send sanitized actions array (already sanitized when recorded)
                 sendResponse({ 
@@ -466,7 +466,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             case 'TAB_ACTIVATED':
                 // These are broadcast messages from background script
                 // Just acknowledge receipt
-                console.log(`Content script received: ${action}`);
+                // console.log(`Content script received: ${action}`);  // Commented for production
                 sendResponse({ success: true });
                 break;
                 

@@ -50,7 +50,7 @@
             </div>
             
             <!-- Secondary Controls -->
-            <div class="secondary-controls" id="secondaryControls" style="display: none;">
+            <div class="secondary-controls hidden" id="secondaryControls">
                 <button id="pauseResumeButton" class="control-button pause-button">
                     <svg class="pause-icon" viewBox="0 0 24 24">
                         <rect x="6" y="4" width="4" height="16"></rect>
@@ -71,7 +71,7 @@
         </div>
 
         <!-- Recording Information -->
-        <div class="info-section" id="infoSection" style="display: none;">
+        <div class="info-section hidden" id="infoSection">
             <div class="info-item">
                 <span class="info-label">Duration:</span>
                 <span class="info-value" id="durationText">00:00:00</span>
@@ -98,7 +98,7 @@
                 <span>Settings</span>
             </div>
             
-            <div class="settings-panel" id="settingsPanel" style="display: none;">
+            <div class="settings-panel hidden" id="settingsPanel">
                 <div class="setting-item">
                     <label for="captureVideo">
                         <input type="checkbox" id="captureVideo" checked>
@@ -144,7 +144,7 @@
         </div>
         
         <!-- Error Display -->
-        <div class="error-section" id="errorSection" style="display: none;">
+        <div class="error-section hidden" id="errorSection">
             <div class="error-message" id="errorMessage"></div>
             <button class="error-dismiss" id="errorDismiss">×</button>
         </div>
@@ -157,6 +157,8 @@
         </div>
     </div>
     
+    <script src="../debug/debug_logger.js"></script>
+    <script src="../debug/connection_diagnostic.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

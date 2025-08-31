@@ -168,7 +168,7 @@ class NativeMessagingHandler {
             this.lastError = null;
             this.exitFallbackMode();
             
-            console.log(`Health check successful (${responseTime}ms)`);
+            // console.log(`Health check successful (${responseTime}ms)`);  // Commented for production
             
         } catch (error) {
             console.error('Health check failed:', error);
@@ -187,13 +187,13 @@ class NativeMessagingHandler {
         
         // Try to recover connection
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
-            console.log(`Connection recovery attempt ${attempt}/${this.maxRetries}`);
+            // console.log(`Connection recovery attempt ${attempt}/${this.maxRetries}`);  // Commented for production
             
             await this.sleep(this.retryDelay * Math.pow(this.backoffMultiplier, attempt - 1));
             
             try {
                 await this.sendMessage('PING');
-                console.log('Connection recovery successful');
+                // console.log('Connection recovery successful');  // Commented for production
                 this.isConnected = true;
                 this.lastError = null;
                 this.exitFallbackMode();
@@ -236,7 +236,7 @@ class NativeMessagingHandler {
         this.fallbackMode = false;
         this.fallbackReason = null;
         
-        console.log('Exiting fallback mode - connection restored');
+        // console.log('Exiting fallback mode - connection restored');  // Commented for production
         
         // Notify all components about restored connection
         this.notifyFallbackMode(false, null);
@@ -522,7 +522,7 @@ class NativeMessagingHandler {
     }
 
     async startPlayback(recordingId) {
-        console.log(`Starting playback for recording ID: ${recordingId}`);
+        // console.log(`Starting playback for recording ID: ${recordingId}`);  // Commented for production
         // This is a placeholder for the actual implementation
         return this.sendMessage('START_PLAYBACK', { recordingId });
     }
@@ -581,7 +581,7 @@ class MKDBackgroundService {
         this.initializeEventListeners();
         this.initializeKeyboardShortcuts();
         
-        console.log('MKD Automation background service initialized');
+        // console.log('MKD Automation background service initialized');  // Commented for production
     }
     
     /**
@@ -628,7 +628,7 @@ class MKDBackgroundService {
      * Handle extension installation
      */
     handleInstall(details) {
-        console.log('MKD Automation installed:', details);
+        // console.log('MKD Automation installed:', details);  // Commented for production
         
         // Set initial badge
         this.updateBadge('', '#808080');
@@ -641,7 +641,7 @@ class MKDBackgroundService {
             this.showWelcomeNotification();
         } else if (details.reason === 'update') {
             // Extension update
-            console.log(`Updated from ${details.previousVersion} to ${chrome.runtime.getManifest().version}`);
+            // console.log(`Updated from ${details.previousVersion} to ${chrome.runtime.getManifest().version}`);  // Commented for production
         }
     }
     
@@ -649,7 +649,7 @@ class MKDBackgroundService {
      * Handle messages from other parts of the extension
      */
     async handleMessage(message, sender, sendResponse) {
-        console.log('Background received message:', message.type);
+        // console.log('Background received message:', message.type);  // Commented for production
         
         try {
             // Validate message structure
@@ -729,7 +729,7 @@ class MKDBackgroundService {
      * Handle keyboard commands
      */
     async handleCommand(command) {
-        console.log('Keyboard command:', command);
+        // console.log('Keyboard command:', command);  // Commented for production
         
         switch (command) {
             case 'stop_recording':
@@ -776,7 +776,7 @@ class MKDBackgroundService {
                 sessionId: result.sessionId
             });
             
-            console.log('Recording started:', result.sessionId);
+            // console.log('Recording started:', result.sessionId);  // Commented for production
             return result;
             
         } catch (error) {
@@ -813,7 +813,7 @@ class MKDBackgroundService {
                 result: result
             });
             
-            console.log('Recording stopped:', result);
+            // console.log('Recording stopped:', result);  // Commented for production
             return result;
             
         } catch (error) {
@@ -945,7 +945,7 @@ class MKDBackgroundService {
      * Show notification to user
      */
     showNotification(message, type = 'info') {
-        console.log(`[${type.toUpperCase()}] ${message}`);
+        // console.log(`[${type.toUpperCase()}] ${message}`);  // Commented for production
         // Note: Notifications require permission in manifest
     }
     
@@ -953,7 +953,7 @@ class MKDBackgroundService {
      * Show welcome notification on first install
      */
     showWelcomeNotification() {
-        console.log('MKD Automation installed successfully! Click the extension icon to start recording.');
+        // console.log('MKD Automation installed successfully! Click the extension icon to start recording.');  // Commented for production
     }
     
     /**
@@ -962,7 +962,7 @@ class MKDBackgroundService {
     async checkNativeHostAvailability() {
         try {
             await this.nativeMessaging.getStatus();
-            console.log('Native host is available');
+            // console.log('Native host is available');  // Commented for production
             this.updateBadge('', '#00AA00');
         } catch (error) {
             console.warn('Native host not available:', error.message);
@@ -1009,7 +1009,7 @@ class MKDBackgroundService {
      * Handle extension suspend
      */
     handleSuspend() {
-        console.log('Extension suspending...');
+        // console.log('Extension suspending...');  // Commented for production
         
         // Clean up native messaging
         this.nativeMessaging.cleanup();

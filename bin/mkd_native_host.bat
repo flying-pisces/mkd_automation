@@ -19,7 +19,8 @@ if not exist "C:\project\mkd_automation" (
 :: Set PYTHONPATH to include src directory
 set PYTHONPATH=C:\project\mkd_automation\src;%PYTHONPATH%
 
-:: Launch the native host with logging
+:: Change to src directory and run the module
+cd /d "C:\project\mkd_automation\src"
 python -m mkd_v2.native_host.host %*
 
 :: Exit with the same code as Python
