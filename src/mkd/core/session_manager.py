@@ -193,6 +193,18 @@ class SessionManager:
         """Get all sessions"""
         return self._sessions.copy()
     
+    def to_script(self) -> Optional[AutomationScript]:
+        """Convert current session to an automation script."""
+        if not self._current_session:
+            return None
+        
+        return AutomationScript(
+            name=f"Recording_{self._current_session.session_id}",
+            description=f"Recorded session {self._current_session.session_id}",
+            created_at=datetime.datetime.now(),
+            actions=list(self._current_session.actions)
+        )
+    
     def create_script_from_session(self, session_id: str, name: str, 
                                  description: str = "") -> Optional[AutomationScript]:
         """

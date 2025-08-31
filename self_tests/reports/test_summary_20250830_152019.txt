@@ -1,0 +1,65 @@
+============================================================
+MKD AUTOMATION SELF-TEST REPORT
+============================================================
+
+Timestamp: 2025-08-30 15:20:19.118606
+Duration: 0.23 seconds
+Platform: Windows 11
+Python: 3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]
+
+SUMMARY
+----------------------------------------
+Total Tests: 23
+Passed: 22 (95.7%)
+Failed: 1 (4.3%)
+Skipped: 0
+
+RESULTS BY CATEGORY
+----------------------------------------
+
+ENVIRONMENT:
+  [OK] python_version - Python 3.13.5
+  [OK] package_pytest - pytest installed
+  [OK] package_msgpack - msgpack installed
+  [OK] package_cryptography - cryptography installed
+
+IMPORTS:
+  [OK] mkd.core.config_manager
+  [OK] mkd.core.session_manager
+  [OK] mkd.core.script_manager
+  [OK] mkd.recording.recording_engine
+  [OK] mkd.recording.input_capturer
+  [OK] mkd.playback.playback_engine
+  [OK] mkd.playback.action_executor
+  [OK] mkd.platform.detector
+  [OK] mkd.data.script_storage
+  [OK] mkd.data.encryption
+
+CORE:
+  [OK] ConfigManager - Sample rate: 60 Hz
+  [OK] SessionManager - Session ID: 9f6e3110-803a-4643-8f69-abb3c6f4d60e
+
+DATA:
+  [OK] ScriptStorage - Save/load working
+
+PLATFORM:
+  [OK] PlatformDetector - Platform: Windows, Implementation: WindowsPlatform
+
+RECORDING:
+  [OK] RecordingEngine - Recording engine initialized
+
+PLAYBACK:
+  [OK] PlaybackEngine - Playback engine initialized
+
+CHROME:
+  [OK] extension_files - All extension files present
+  [OK] manifest_validation - Manifest v3, Extension v2.0.0
+
+INTEGRATION:
+  [FAIL] end_to_end_flow - ERROR: script must be an AutomationScript instance
+
+FAILED TESTS DETAILS
+----------------------------------------
+
+integration/end_to_end_flow:
+  Error: script must be an AutomationScript instance
