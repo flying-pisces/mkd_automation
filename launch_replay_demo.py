@@ -12,7 +12,7 @@ from pathlib import Path
 def main():
     """Launch the replay system demo."""
     print("\n" + "=" * 60)
-    print("  🎬 MKD AUTOMATION REPLAY SYSTEM")
+    print("  MKD AUTOMATION REPLAY SYSTEM")
     print("=" * 60)
     
     # Check if we're in the right directory
@@ -57,7 +57,7 @@ def main():
         print("  (tkinter is usually included with Python)")
     
     # Launch demo
-    print("\n  🚀 Launching demo interface...")
+    print("\n  Launching demo interface...")
     print("\n" + "=" * 60)
     
     try:

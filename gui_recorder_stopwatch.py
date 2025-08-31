@@ -13,12 +13,11 @@ Features:
 import sys
 import os
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox, filedialog
+from tkinter import ttk, scrolledtext, messagebox
 import threading
 import time
 from datetime import datetime
 from pathlib import Path
-import glob
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -30,7 +29,6 @@ except ImportError:
     HAS_PYNPUT = False
 
 try:
-    from PIL import Image, ImageTk
     import PIL.ImageGrab as ImageGrab
     HAS_PIL = True
 except ImportError:
@@ -38,9 +36,85 @@ except ImportError:
 
 from mkd.core.session_manager import SessionManager
 from mkd.core.config_manager import ConfigManager
-from mkd.data.models import Action, AutomationScript
+from mkd.data.models import Action
 from mkd.data.script_storage import ScriptStorage
 from mkd.platform.detector import PlatformDetector
+
+
+class LiveEventsWindow:
+    """Optional live events display window during recording."""
+    
+    def __init__(self):
+        self.window = None
+        self.events_text = None
+        
+    def show(self):
+        """Create and show the live events window."""
+        self.window = tk.Toplevel()
+        
+        # Remove window decorations for clean look
+        self.window.overrideredirect(True)
+        
+        self.window.geometry("400x300")
+        
+        # Position in bottom-right corner
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
+        x = screen_width - 420
+        y = screen_height - 350
+        self.window.geometry(f"400x300+{x}+{y}")
+        
+        # Make it stay on top
+        self.window.attributes('-topmost', True)
+        
+        # Main frame with border for visual separation
+        main_frame = tk.Frame(self.window, bg="white", relief="raised", bd=2)
+        main_frame.pack(fill="both", expand=True)
+        
+        # Header with title and close button
+        header_frame = tk.Frame(main_frame, bg="#2196F3", height=30)
+        header_frame.pack(fill="x")
+        header_frame.pack_propagate(False)
+        
+        tk.Label(header_frame, text="Live Event Monitor",
+                font=("Arial", 11, "bold"), bg="#2196F3", fg="white").pack(side="left", padx=10, pady=5)
+        
+        # Close button for live events window
+        close_btn = tk.Label(header_frame, text="✕", 
+                           font=("Arial", 14, "bold"),
+                           bg="#2196F3", fg="white", cursor="hand2")
+        close_btn.pack(side="right", padx=10, pady=5)
+        close_btn.bind("<Button-1>", lambda e: self.close())
+        
+        # Content frame
+        content_frame = tk.Frame(main_frame, bg="white")
+        content_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Events display
+        self.events_text = scrolledtext.ScrolledText(content_frame, height=15, width=50)
+        self.events_text.pack(fill="both", expand=True, pady=5)
+        
+        # Clear button
+        tk.Button(content_frame, text="Clear Events",
+                 command=self.clear_events).pack(pady=5)
+    
+    def add_event(self, event_text):
+        """Add an event to the display."""
+        if self.events_text:
+            timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+            self.events_text.insert("end", f"[{timestamp}] {event_text}\n")
+            self.events_text.see("end")
+    
+    def clear_events(self):
+        """Clear all events."""
+        if self.events_text:
+            self.events_text.delete(1.0, "end")
+    
+    def close(self):
+        """Close the events window."""
+        if self.window:
+            self.window.destroy()
+            self.window = None
 
 
 class StopwatchWindow:
@@ -57,7 +131,10 @@ class StopwatchWindow:
     def show(self):
         """Create and show the stopwatch window."""
         self.window = tk.Toplevel()
-        self.window.title("Recording")
+        
+        # Remove window decorations (title bar, buttons, etc.)
+        self.window.overrideredirect(True)
+        
         self.window.geometry("200x60")
         
         # Position in top-right corner
@@ -65,9 +142,6 @@ class StopwatchWindow:
         
         # Make it stay on top
         self.window.attributes('-topmost', True)
-        
-        # Prevent resizing
-        self.window.resizable(False, False)
         
         # Main frame
         main_frame = tk.Frame(self.window, bg="white", relief="raised", bd=2)
@@ -92,9 +166,6 @@ class StopwatchWindow:
                            bg="white", fg="black", cursor="hand2")
         close_btn.pack(side="right", padx=10)
         close_btn.bind("<Button-1>", self.stop_recording)
-        
-        # Handle window close
-        self.window.protocol("WM_DELETE_WINDOW", self.stop_recording)
         
         # Start timer
         self.start_time = time.time()
@@ -245,134 +316,6 @@ class ScreenshotCapture:
             time.sleep(self.capture_interval)
 
 
-class ReplayController:
-    """Controls replay of recorded sessions with screenshots."""
-    
-    def __init__(self, parent):
-        self.parent = parent
-        self.replay_window = None
-        self.current_frame = 0
-        self.frames = []
-        self.is_playing = False
-        self.playback_speed = 1.0
-        
-    def load_recording(self, recording_dir):
-        """Load a recording for replay."""
-        recording_path = Path(recording_dir)
-        
-        # Load PNG frames
-        png_files = sorted(recording_path.glob("frame_*.png"))
-        self.frames = []
-        
-        for png_file in png_files:
-            try:
-                img = Image.open(png_file)
-                # Resize for display
-                img.thumbnail((800, 600), Image.Resampling.LANCZOS)
-                self.frames.append(ImageTk.PhotoImage(img))
-            except Exception as e:
-                print(f"Error loading frame {png_file}: {e}")
-        
-        self.current_frame = 0
-        return len(self.frames) > 0
-    
-    def show_replay_window(self):
-        """Show the replay window."""
-        if not self.frames:
-            return
-            
-        self.replay_window = tk.Toplevel()
-        self.replay_window.title("Replay Recording")
-        self.replay_window.geometry("850x700")
-        
-        # Display canvas
-        self.canvas = tk.Canvas(self.replay_window, width=800, height=600, bg="black")
-        self.canvas.pack(pady=10)
-        
-        # Control frame
-        controls = tk.Frame(self.replay_window)
-        controls.pack()
-        
-        # Play/Pause button
-        self.play_btn = tk.Button(controls, text="▶ Play", command=self.toggle_play)
-        self.play_btn.pack(side="left", padx=5)
-        
-        # Frame slider
-        self.frame_slider = tk.Scale(controls, from_=0, to=len(self.frames)-1,
-                                    orient="horizontal", length=300,
-                                    command=self.seek_frame)
-        self.frame_slider.pack(side="left", padx=10)
-        
-        # Speed control
-        tk.Label(controls, text="Speed:").pack(side="left", padx=5)
-        self.speed_var = tk.StringVar(value="1.0x")
-        speed_menu = ttk.Combobox(controls, textvariable=self.speed_var,
-                                 values=["0.5x", "1.0x", "1.5x", "2.0x"],
-                                 width=6, state="readonly")
-        speed_menu.pack(side="left")
-        speed_menu.bind("<<ComboboxSelected>>", self.change_speed)
-        
-        # Frame counter
-        self.frame_label = tk.Label(controls, text=f"Frame 0/{len(self.frames)}")
-        self.frame_label.pack(side="left", padx=10)
-        
-        # Show first frame
-        self.show_frame(0)
-        
-        # Handle window close
-        self.replay_window.protocol("WM_DELETE_WINDOW", self.close_replay)
-    
-    def show_frame(self, frame_num):
-        """Display a specific frame."""
-        if 0 <= frame_num < len(self.frames):
-            self.current_frame = frame_num
-            self.canvas.delete("all")
-            self.canvas.create_image(400, 300, image=self.frames[frame_num])
-            self.frame_slider.set(frame_num)
-            self.frame_label.config(text=f"Frame {frame_num+1}/{len(self.frames)}")
-    
-    def toggle_play(self):
-        """Toggle play/pause."""
-        if self.is_playing:
-            self.is_playing = False
-            self.play_btn.config(text="▶ Play")
-        else:
-            self.is_playing = True
-            self.play_btn.config(text="⏸ Pause")
-            self.play_frames()
-    
-    def play_frames(self):
-        """Play frames in sequence."""
-        if not self.is_playing or not self.replay_window:
-            return
-            
-        self.show_frame(self.current_frame)
-        
-        if self.current_frame < len(self.frames) - 1:
-            self.current_frame += 1
-            delay = int(500 / self.playback_speed)  # 2 FPS base rate
-            self.replay_window.after(delay, self.play_frames)
-        else:
-            # Reached end
-            self.is_playing = False
-            self.play_btn.config(text="▶ Play")
-    
-    def seek_frame(self, value):
-        """Seek to a specific frame."""
-        self.show_frame(int(value))
-    
-    def change_speed(self, event=None):
-        """Change playback speed."""
-        speed_str = self.speed_var.get()
-        self.playback_speed = float(speed_str[:-1])
-    
-    def close_replay(self):
-        """Close the replay window."""
-        self.is_playing = False
-        if self.replay_window:
-            self.replay_window.destroy()
-            self.replay_window = None
-
 
 class GUIRecorderApp:
     """Main GUI application."""
@@ -399,8 +342,9 @@ class GUIRecorderApp:
         # Visual components
         self.red_frame = RedBoundaryFrame()
         self.stopwatch = StopwatchWindow(self)
+        self.live_events_window = LiveEventsWindow()
         self.screenshot_capture = None
-        self.replay_controller = ReplayController(self)
+        # Replay functionality handled by separate replay manager
         
         # Input listeners
         self.mouse_listener = None
@@ -410,6 +354,7 @@ class GUIRecorderApp:
         self.capture_mouse = tk.BooleanVar(value=True)
         self.capture_keyboard = tk.BooleanVar(value=True)
         self.show_red_boundary = tk.BooleanVar(value=True)
+        self.show_live_events = tk.BooleanVar(value=False)
         
         # Event display
         self.events_text = None
@@ -438,10 +383,6 @@ class GUIRecorderApp:
                        foreground="black", 
                        font=("Arial", 12, "bold"))
         
-        style.configure("Replay.TButton",
-                       background="#2196F3",
-                       foreground="black",
-                       font=("Arial", 12, "bold"))
         
         style.configure("Pause.TButton",
                        background="#FF9800",
@@ -492,16 +433,7 @@ class GUIRecorderApp:
                                  state="disabled")
         self.stop_btn.pack(side="left", padx=10)
         
-        # Replay controls
-        replay_frame = tk.Frame(self.root)
-        replay_frame.pack(pady=10)
-        
-        ttk.Button(replay_frame, text="▶ Replay Last Recording",
-                  style="Replay.TButton",
-                  command=self.replay_last_recording).pack(side="left", padx=5)
-        
-        ttk.Button(replay_frame, text="📁 Load Recording",
-                  command=self.load_recording).pack(side="left", padx=5)
+        # Note: Replay functionality available via separate replay manager
         
         # Settings frame
         settings_frame = tk.LabelFrame(self.root, text="Recording Settings", padx=20, pady=10)
@@ -513,6 +445,8 @@ class GUIRecorderApp:
                       variable=self.capture_keyboard).pack(anchor="w")
         tk.Checkbutton(settings_frame, text="Show Red Boundary",
                       variable=self.show_red_boundary).pack(anchor="w")
+        tk.Checkbutton(settings_frame, text="Show Live Events Window",
+                      variable=self.show_live_events).pack(anchor="w")
         
         # Recent Events
         events_frame = tk.LabelFrame(self.root, text="Recent Events", padx=10, pady=10)
@@ -544,6 +478,10 @@ class GUIRecorderApp:
             self.events_text.insert("end", f"[{timestamp}] {event_text}\n")
             self.events_text.see("end")
             self.event_count += 1
+        
+        # Also add to live events window if it's open
+        if self.live_events_window.window:
+            self.live_events_window.add_event(event_text)
     
     def update_stats(self):
         """Update statistics display."""
@@ -621,9 +559,13 @@ class GUIRecorderApp:
         
         self.add_event("Recording started")
         
-        # Minimize main window and show stopwatch
-        self.root.iconify()  # Minimize main window
+        # Hide main window and show only stopwatch
+        self.root.withdraw()  # Hide main window completely
         self.stopwatch.show()
+        
+        # Show live events window if enabled
+        if self.show_live_events.get():
+            self.live_events_window.show()
         
         self.update_stats()
     
@@ -687,8 +629,6 @@ class GUIRecorderApp:
     
     def stop_recording_from_stopwatch(self):
         """Stop recording from stopwatch window."""
-        # Restore main window
-        self.root.deiconify()
         self.stop_recording_internal()
     
     def stop_recording_internal(self):
@@ -717,8 +657,12 @@ class GUIRecorderApp:
             screenshot_count = self.screenshot_capture.stop()
             self.screenshot_capture = None
         
-        # Close stopwatch
+        # Close stopwatch and live events window
         self.stopwatch.close()
+        self.live_events_window.close()
+        
+        # Restore main window
+        self.root.deiconify()
         
         # Stop recording session
         duration = time.time() - self.start_time if self.start_time else 0
