@@ -13,11 +13,18 @@ class MKDPopupController {
         this.timerInterval = null;
         this.settingsVisible = false;
         
+        // Fallback mode state
+        this.fallbackMode = false;
+        this.fallbackReason = null;
+        
         this.initializeElements();
         this.initializeEventListeners();
         this.loadSettings();
         this.updateStatus();
         this.loadRecentRecordings();
+        
+        // Listen for fallback mode changes
+        this.initializeFallbackHandling();
         
         console.log('MKD Popup Controller initialized');
     }
@@ -325,41 +332,18 @@ class MKDPopupController {
         if (this.isRecording) {
             this.startStopButton.className = 'control-button stop-button';
             this.buttonText.textContent = 'Stop Recording';
-            this.buttonIcon.innerHTML = `
-                <svg class="stop-icon" viewBox="0 0 24 24">
-                    <rect x="6" y="6" width="12" height="12"></rect>
-                </svg>
-            `;
+            this.setButtonIcon(this.buttonIcon, 'stop');
         } else {
             this.startStopButton.className = 'control-button start-button';
             this.buttonText.textContent = 'Start Recording';
-            this.buttonIcon.innerHTML = `
-                <svg class="play-icon" viewBox="0 0 24 24">
-                    <polygon points="5,3 19,12 5,21"></polygon>
-                </svg>
-            `;
+            this.setButtonIcon(this.buttonIcon, 'play');
         }
         
         // Update secondary controls
         if (this.isRecording) {
             this.secondaryControls.style.display = 'block';
             
-            if (this.isPaused) {
-                this.pauseResumeButton.innerHTML = `
-                    <svg class="play-icon" viewBox="0 0 24 24">
-                        <polygon points="5,3 19,12 5,21"></polygon>
-                    </svg>
-                    <span>Resume</span>
-                `;
-            } else {
-                this.pauseResumeButton.innerHTML = `
-                    <svg class="pause-icon" viewBox="0 0 24 24">
-                        <rect x="6" y="4" width="4" height="16"></rect>
-                        <rect x="14" y="4" width="4" height="16"></rect>
-                    </svg>
-                    <span>Pause</span>
-                `;
-            }
+            this.updatePauseResumeButton();
         } else {
             this.secondaryControls.style.display = 'none';
         }
@@ -438,16 +422,19 @@ class MKDPopupController {
      * Render recent recordings in the UI
      */
     renderRecentRecordings(recordings) {
+        // Clear existing content
+        this.clearElement(this.recentRecordingsList);
+        
         if (recordings && recordings.length > 0) {
-            this.recentRecordingsList.innerHTML = recordings.map((rec, index) => `
-                <div class="recording-item">
-                    <input type="radio" id="rec-${rec.id}" name="recording" value="${rec.id}" ${index === 0 ? 'checked' : ''}>
-                    <label for="rec-${rec.id}">${rec.name}</label>
-                    <span>${rec.date}</span>
-                </div>
-            `).join('');
+            recordings.forEach((rec, index) => {
+                const recordingItem = this.createRecordingItem(rec, index === 0);
+                this.recentRecordingsList.appendChild(recordingItem);
+            });
         } else {
-            this.recentRecordingsList.innerHTML = '<div class="empty-list-message">No recent recordings found.</div>';
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'empty-list-message';
+            emptyMessage.textContent = 'No recent recordings found.';
+            this.recentRecordingsList.appendChild(emptyMessage);
         }
     }
     
@@ -505,6 +492,154 @@ class MKDPopupController {
         } catch (error) {
             console.error('Failed to save settings:', error);
             this.showError('Failed to save settings.');
+        }
+    }
+    
+    /**
+     * Initialize fallback mode handling
+     */
+    initializeFallbackHandling() {
+        // Listen for fallback mode changes from background script
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === 'FALLBACK_MODE_CHANGE') {
+                this.handleFallbackModeChange(message.fallbackMode, message.reason);
+            }
+        });
+    }
+    
+    /**
+     * Handle fallback mode state changes
+     */
+    handleFallbackModeChange(inFallback, reason) {
+        this.fallbackMode = inFallback;
+        this.fallbackReason = reason;
+        
+        console.log(`Fallback mode: ${inFallback}, reason: ${reason}`);
+        
+        // Update UI to reflect fallback state
+        this.updateFallbackUI();
+    }
+    
+    /**
+     * Update UI for fallback mode
+     */
+    updateFallbackUI() {
+        if (this.fallbackMode) {
+            // Show fallback state
+            this.statusText.textContent = 'Backend Unavailable';
+            this.statusDot.className = 'status-dot error';
+            this.connectionText.textContent = this.fallbackReason || 'Python backend not available';
+            
+            // Disable recording controls
+            this.startStopButton.disabled = true;
+            this.startPlaybackButton.disabled = true;
+            
+            // Show helpful message
+            this.showFallbackMessage();
+            
+        } else {
+            // Restore normal state
+            this.statusText.textContent = 'Ready';
+            this.statusDot.className = 'status-dot ready';
+            this.connectionText.textContent = 'Connected to Python backend';
+            
+            // Re-enable controls
+            this.startStopButton.disabled = false;
+            this.startPlaybackButton.disabled = false;
+            
+            // Hide fallback message
+            this.hideFallbackMessage();
+        }
+    }
+    
+    /**
+     * Show fallback mode message with instructions
+     */
+    showFallbackMessage() {
+        // Check if fallback message already exists
+        let fallbackMessage = document.getElementById('fallbackMessage');
+        
+        if (!fallbackMessage) {
+            fallbackMessage = document.createElement('div');
+            fallbackMessage.id = 'fallbackMessage';
+            fallbackMessage.className = 'fallback-message';
+            
+            fallbackMessage.innerHTML = `
+                <div class="fallback-content">
+                    <h3>Python Backend Required</h3>
+                    <p>The MKD Automation desktop application is not available. To use recording features:</p>
+                    <ol>
+                        <li>Install the MKD Automation desktop application</li>
+                        <li>Make sure Python is installed and accessible</li>
+                        <li>Start the desktop application</li>
+                        <li>Refresh this extension</li>
+                    </ol>
+                    <div class="fallback-actions">
+                        <button id="retryConnection" class="retry-button">Retry Connection</button>
+                    </div>
+                </div>
+            `;
+            
+            // Insert before controls section
+            const controlsSection = document.querySelector('.controls-section');
+            controlsSection.parentNode.insertBefore(fallbackMessage, controlsSection);
+            
+            // Add retry button handler
+            document.getElementById('retryConnection').addEventListener('click', () => {
+                this.retryConnection();
+            });
+        }
+        
+        fallbackMessage.style.display = 'block';
+    }
+    
+    /**
+     * Hide fallback mode message
+     */
+    hideFallbackMessage() {
+        const fallbackMessage = document.getElementById('fallbackMessage');
+        if (fallbackMessage) {
+            fallbackMessage.style.display = 'none';
+        }
+    }
+    
+    /**
+     * Retry connection to Python backend
+     */
+    async retryConnection() {
+        try {
+            const retryButton = document.getElementById('retryConnection');
+            if (retryButton) {
+                retryButton.textContent = 'Retrying...';
+                retryButton.disabled = true;
+            }
+            
+            // Try to ping the backend
+            const response = await chrome.runtime.sendMessage({
+                type: 'GET_CONNECTION_STATUS'
+            });
+            
+            if (response.success && response.data.isConnected) {
+                // Connection restored
+                this.handleFallbackModeChange(false, null);
+                this.updateStatus();
+            } else {
+                // Still not connected
+                throw new Error(response.error || 'Backend still not available');
+            }
+            
+        } catch (error) {
+            console.warn('Retry connection failed:', error);
+            
+            // Reset retry button
+            const retryButton = document.getElementById('retryConnection');
+            if (retryButton) {
+                retryButton.textContent = 'Retry Connection';
+                retryButton.disabled = false;
+            }
+            
+            // Show error
+            this.showError(`Connection retry failed: ${error.message}`);
         }
     }
     
@@ -652,6 +787,115 @@ class MKDPopupController {
     hideError() {
         this.errorSection.style.display = 'none';
         this.errorMessage.textContent = '';
+    }
+    
+    /**
+     * Safely create and configure button icons
+     */
+    setButtonIcon(iconElement, iconType) {
+        // Clear existing content
+        this.clearElement(iconElement);
+        
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        
+        if (iconType === 'play') {
+            svg.className = 'play-icon';
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '5,3 19,12 5,21');
+            svg.appendChild(polygon);
+        } else if (iconType === 'stop') {
+            svg.className = 'stop-icon';
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', '6');
+            rect.setAttribute('y', '6');
+            rect.setAttribute('width', '12');
+            rect.setAttribute('height', '12');
+            svg.appendChild(rect);
+        } else if (iconType === 'pause') {
+            svg.className = 'pause-icon';
+            const rect1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect1.setAttribute('x', '6');
+            rect1.setAttribute('y', '4');
+            rect1.setAttribute('width', '4');
+            rect1.setAttribute('height', '16');
+            svg.appendChild(rect1);
+            
+            const rect2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect2.setAttribute('x', '14');
+            rect2.setAttribute('y', '4');
+            rect2.setAttribute('width', '4');
+            rect2.setAttribute('height', '16');
+            svg.appendChild(rect2);
+        }
+        
+        iconElement.appendChild(svg);
+    }
+    
+    /**
+     * Update pause/resume button safely
+     */
+    updatePauseResumeButton() {
+        // Clear existing content
+        this.clearElement(this.pauseResumeButton);
+        
+        if (this.isPaused) {
+            this.setButtonIcon(this.pauseResumeButton, 'play');
+            const span = document.createElement('span');
+            span.textContent = 'Resume';
+            this.pauseResumeButton.appendChild(span);
+        } else {
+            this.setButtonIcon(this.pauseResumeButton, 'pause');
+            const span = document.createElement('span');
+            span.textContent = 'Pause';
+            this.pauseResumeButton.appendChild(span);
+        }
+    }
+    
+    /**
+     * Create a recording item element safely
+     */
+    createRecordingItem(recording, isChecked = false) {
+        const recordingItem = document.createElement('div');
+        recordingItem.className = 'recording-item';
+        
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.id = `rec-${this.escapeHtml(recording.id)}`;
+        radio.name = 'recording';
+        radio.value = this.escapeHtml(recording.id);
+        radio.checked = isChecked;
+        
+        const label = document.createElement('label');
+        label.setAttribute('for', radio.id);
+        label.textContent = recording.name;
+        
+        const dateSpan = document.createElement('span');
+        dateSpan.textContent = recording.date;
+        
+        recordingItem.appendChild(radio);
+        recordingItem.appendChild(label);
+        recordingItem.appendChild(dateSpan);
+        
+        return recordingItem;
+    }
+    
+    /**
+     * Safely clear an element's content
+     */
+    clearElement(element) {
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+    }
+    
+    /**
+     * Escape HTML to prevent XSS
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 }
 

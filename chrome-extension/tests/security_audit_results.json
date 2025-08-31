@@ -1,0 +1,80 @@
+[
+  {
+    "status": "PASS",
+    "test": "innerHTML_usage",
+    "description": "No dangerous innerHTML usage detected",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "dangerous_functions",
+    "description": "No dangerous functions detected",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "input_sanitization",
+    "description": "Input sanitization implemented",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "csp_implementation",
+    "description": "Content Security Policy properly implemented",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "csp_compliance",
+    "description": "No CSP compliance violations found",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "message_validation",
+    "description": "Message validation implemented",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "parameter_validation",
+    "description": "Parameter validation implemented",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "security_utils",
+    "description": "SecurityUtils class properly implemented",
+    "details": null
+  },
+  {
+    "status": "WARN",
+    "test": "permission_minimization",
+    "description": "Content script uses broad URL matches",
+    "details": "<all_urls>"
+  },
+  {
+    "status": "PASS",
+    "test": "permission_justification",
+    "description": "All permissions are justified",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "manifest_compliance",
+    "description": "Manifest meets store requirements",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "icon_compliance",
+    "description": "All required icons present and valid",
+    "details": null
+  },
+  {
+    "status": "PASS",
+    "test": "privacy_policy",
+    "description": "Privacy policy complete and accessible",
+    "details": null
+  }
+]

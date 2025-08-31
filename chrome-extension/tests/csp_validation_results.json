@@ -1,0 +1,56 @@
+[
+  {
+    "test": "manifest_csp",
+    "status": "PASS",
+    "message": "CSP defined in manifest",
+    "details": null
+  },
+  {
+    "test": "csp_script_src",
+    "status": "PASS",
+    "message": "script-src directive present",
+    "details": null
+  },
+  {
+    "test": "script_src_security",
+    "status": "PASS",
+    "message": "script-src uses 'self' restriction",
+    "details": null
+  },
+  {
+    "test": "csp_object_src",
+    "status": "PASS",
+    "message": "object-src directive present",
+    "details": null
+  },
+  {
+    "test": "object_src_security",
+    "status": "PASS",
+    "message": "object-src is appropriately restrictive",
+    "details": null
+  },
+  {
+    "test": "csp_style_src",
+    "status": "PASS",
+    "message": "style-src directive present",
+    "details": null
+  },
+  {
+    "test": "style_src_security",
+    "status": "PASS",
+    "message": "style-src allows extension styling",
+    "details": null
+  },
+  {
+    "test": "html_compliance",
+    "status": "FAIL",
+    "message": "CSP violations in HTML files",
+    "details": "popup.html: 1 inline scripts; popup.html: 1 inline event handlers"
+  },
+  {
+    "test": "js_compliance",
+    "status": "PASS",
+    "message": "All 3 JS files comply with CSP",
+    "details": null
+  }
+]

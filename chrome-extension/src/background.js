@@ -9,6 +9,96 @@
  * - Extension lifecycle events
  */
 
+/**
+ * Input validation and sanitization utilities
+ */
+class SecurityUtils {
+    /**
+     * Validate and sanitize string input
+     */
+    static validateString(input, maxLength = 1000) {
+        if (typeof input !== 'string') {
+            throw new Error('Input must be a string');
+        }
+        
+        if (input.length > maxLength) {
+            throw new Error(`Input exceeds maximum length of ${maxLength}`);
+        }
+        
+        // Remove dangerous characters and HTML
+        return input.replace(/<[^>]*>/g, '').replace(/[<>'"&]/g, '');
+    }
+    
+    /**
+     * Validate message type
+     */
+    static validateMessageType(type) {
+        const validTypes = [
+            'START_RECORDING', 'STOP_RECORDING', 'PAUSE_RECORDING', 
+            'RESUME_RECORDING', 'GET_STATUS', 'GET_RECENT_RECORDINGS',
+            'START_PLAYBACK'
+        ];
+        
+        if (!validTypes.includes(type)) {
+            throw new Error(`Invalid message type: ${type}`);
+        }
+        
+        return type;
+    }
+    
+    /**
+     * Validate recording configuration
+     */
+    static validateRecordingConfig(config) {
+        if (!config || typeof config !== 'object') {
+            throw new Error('Invalid recording configuration');
+        }
+        
+        const validatedConfig = {
+            captureVideo: Boolean(config.captureVideo),
+            captureAudio: Boolean(config.captureAudio),
+            showBorder: Boolean(config.showBorder),
+            keyboardCapture: Boolean(config.keyboardCapture)
+        };
+        
+        // Validate color value
+        if (config.borderColor) {
+            const colorRegex = /^#[0-9A-Fa-f]{6}$/;
+            if (!colorRegex.test(config.borderColor)) {
+                throw new Error('Invalid border color format');
+            }
+            validatedConfig.borderColor = config.borderColor;
+        }
+        
+        // Validate mouse sample rate
+        if (config.mouseSampleRate !== undefined) {
+            const rate = parseInt(config.mouseSampleRate);
+            if (isNaN(rate) || rate < 1 || rate > 1000) {
+                throw new Error('Invalid mouse sample rate');
+            }
+            validatedConfig.mouseSampleRate = rate;
+        }
+        
+        return validatedConfig;
+    }
+    
+    /**
+     * Validate recording ID
+     */
+    static validateRecordingId(id) {
+        if (typeof id !== 'string' || id.length === 0) {
+            throw new Error('Invalid recording ID');
+        }
+        
+        // Allow only alphanumeric, underscore, hyphen
+        if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
+            throw new Error('Recording ID contains invalid characters');
+        }
+        
+        return id;
+    }
+}
+
 class NativeMessagingHandler {
     constructor() {
         this.nativeHostName = 'com.mkd.automation';
@@ -26,10 +116,159 @@ class NativeMessagingHandler {
      * Initialize connection monitoring and health checks
      */
     initializeConnectionMonitoring() {
-        // Check connection health every 30 seconds
-        setInterval(() => {
-            this.checkConnectionHealth();
-        }, 30000);
+        // Connection retry configuration
+        this.maxRetries = 3;
+        this.retryDelay = 2000; // 2 seconds
+        this.backoffMultiplier = 2;
+        
+        // Health check configuration
+        this.healthCheckInterval = 30000; // 30 seconds
+        this.healthCheckTimeout = 5000; // 5 seconds
+        
+        // Start health checking
+        this.startHealthChecking();
+        
+        // Initialize fallback state
+        this.fallbackMode = false;
+        this.fallbackReason = null;
+    }
+    
+    /**
+     * Start periodic health checking
+     */
+    startHealthChecking() {
+        if (this.healthCheckTimer) {
+            clearInterval(this.healthCheckTimer);
+        }
+        
+        this.healthCheckTimer = setInterval(() => {
+            this.performHealthCheck();
+        }, this.healthCheckInterval);
+    }
+    
+    /**
+     * Perform comprehensive health check
+     */
+    async performHealthCheck() {
+        try {
+            const startTime = Date.now();
+            
+            // Send ping with timeout
+            const pingPromise = this.sendMessage('PING');
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Health check timeout')), this.healthCheckTimeout);
+            });
+            
+            await Promise.race([pingPromise, timeoutPromise]);
+            
+            const responseTime = Date.now() - startTime;
+            
+            // Update connection status
+            this.isConnected = true;
+            this.lastError = null;
+            this.exitFallbackMode();
+            
+            console.log(`Health check successful (${responseTime}ms)`);
+            
+        } catch (error) {
+            console.error('Health check failed:', error);
+            this.handleConnectionFailure(error);
+        }
+    }
+    
+    /**
+     * Handle connection failure with retry logic
+     */
+    async handleConnectionFailure(error) {
+        this.isConnected = false;
+        this.lastError = error.message;
+        
+        console.warn(`Connection failure: ${error.message}`);
+        
+        // Try to recover connection
+        for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+            console.log(`Connection recovery attempt ${attempt}/${this.maxRetries}`);
+            
+            await this.sleep(this.retryDelay * Math.pow(this.backoffMultiplier, attempt - 1));
+            
+            try {
+                await this.sendMessage('PING');
+                console.log('Connection recovery successful');
+                this.isConnected = true;
+                this.lastError = null;
+                this.exitFallbackMode();
+                return;
+            } catch (retryError) {
+                console.warn(`Recovery attempt ${attempt} failed:`, retryError.message);
+            }
+        }
+        
+        // All retry attempts failed, enter fallback mode
+        this.enterFallbackMode(error.message);
+    }
+    
+    /**
+     * Enter fallback mode when native host is unavailable
+     */
+    enterFallbackMode(reason) {
+        if (this.fallbackMode) {
+            return; // Already in fallback mode
+        }
+        
+        this.fallbackMode = true;
+        this.fallbackReason = reason;
+        this.isConnected = false;
+        
+        console.warn('Entering fallback mode:', reason);
+        
+        // Notify all components about fallback mode
+        this.notifyFallbackMode(true, reason);
+    }
+    
+    /**
+     * Exit fallback mode when connection is restored
+     */
+    exitFallbackMode() {
+        if (!this.fallbackMode) {
+            return; // Not in fallback mode
+        }
+        
+        this.fallbackMode = false;
+        this.fallbackReason = null;
+        
+        console.log('Exiting fallback mode - connection restored');
+        
+        // Notify all components about restored connection
+        this.notifyFallbackMode(false, null);
+    }
+    
+    /**
+     * Notify components about fallback mode changes
+     */
+    notifyFallbackMode(inFallback, reason) {
+        // Broadcast to all extension components
+        chrome.runtime.sendMessage({
+            type: 'FALLBACK_MODE_CHANGE',
+            fallbackMode: inFallback,
+            reason: reason
+        }).catch(() => {
+            // Ignore if no listeners
+        });
+        
+        // Update badge to indicate fallback mode
+        if (inFallback) {
+            chrome.action.setBadgeText({ text: '!' });
+            chrome.action.setBadgeBackgroundColor({ color: '#FF8800' });
+        } else {
+            chrome.action.setBadgeText({ text: '' });
+        }
+    }
+    
+    /**
+     * Sleep utility for retry delays
+     */
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
     
     /**
@@ -47,29 +286,76 @@ class NativeMessagingHandler {
      */
     async sendMessage(command, params = {}) {
         return new Promise((resolve, reject) => {
-            const messageId = this.generateMessageId();
-            const message = {
-                id: messageId,
-                command: command,
-                params: params,
-                timestamp: Date.now()
-            };
-            
-            // Set up timeout
-            const timeoutId = setTimeout(() => {
-                this.pendingMessages.delete(messageId);
-                reject(new Error(`Message timeout after ${this.connectionTimeout}ms`));
-            }, this.connectionTimeout);
-            
-            // Store pending message
-            this.pendingMessages.set(messageId, {
-                resolve,
-                reject,
-                timeoutId,
-                timestamp: Date.now()
-            });
-            
             try {
+                // Validate command
+                if (typeof command !== 'string' || command.length === 0) {
+                    throw new Error('Invalid command format');
+                }
+                
+                // Validate command type
+                const validatedCommand = SecurityUtils.validateMessageType(command);
+                
+                // Validate params object
+                if (params && typeof params !== 'object') {
+                    throw new Error('Parameters must be an object');
+                }
+                
+                // Validate specific parameter types based on command
+                let validatedParams = {};
+                if (params) {
+                    switch (validatedCommand) {
+                        case 'START_RECORDING':
+                            validatedParams = params.config ? 
+                                SecurityUtils.validateRecordingConfig(params.config) : {};
+                            break;
+                        case 'START_PLAYBACK':
+                            if (params.recordingId) {
+                                validatedParams.recordingId = SecurityUtils.validateRecordingId(params.recordingId);
+                            }
+                            break;
+                        case 'STOP_RECORDING':
+                        case 'PAUSE_RECORDING':
+                        case 'RESUME_RECORDING':
+                            if (params.sessionId) {
+                                validatedParams.sessionId = SecurityUtils.validateString(params.sessionId, 100);
+                            }
+                            break;
+                        default:
+                            // For other commands, sanitize any string values
+                            for (const [key, value] of Object.entries(params)) {
+                                if (typeof value === 'string') {
+                                    validatedParams[key] = SecurityUtils.validateString(value, 500);
+                                } else if (typeof value === 'number' && Number.isFinite(value)) {
+                                    validatedParams[key] = value;
+                                } else if (typeof value === 'boolean') {
+                                    validatedParams[key] = value;
+                                }
+                            }
+                    }
+                }
+                
+                const messageId = this.generateMessageId();
+                const message = {
+                    id: messageId,
+                    command: validatedCommand,
+                    params: validatedParams,
+                    timestamp: Date.now()
+                };
+                
+                // Set up timeout
+                const timeoutId = setTimeout(() => {
+                    this.pendingMessages.delete(messageId);
+                    reject(new Error(`Message timeout after ${this.connectionTimeout}ms`));
+                }, this.connectionTimeout);
+                
+                // Store pending message
+                this.pendingMessages.set(messageId, {
+                    resolve,
+                    reject,
+                    timeoutId,
+                    timestamp: Date.now()
+                });
+                
                 // Send message to native host
                 chrome.runtime.sendNativeMessage(
                     this.nativeHostName,
@@ -78,7 +364,9 @@ class NativeMessagingHandler {
                         this.handleNativeResponse(messageId, response);
                     }
                 );
+                
             } catch (error) {
+                const messageId = this.generateMessageId();
                 this.handleMessageError(messageId, error);
             }
         });
@@ -150,16 +438,70 @@ class NativeMessagingHandler {
     }
     
     /**
-     * Check connection health with native host
+     * Enhanced sendMessage with fallback support
      */
-    async checkConnectionHealth() {
+    async sendMessageWithFallback(command, params = {}) {
+        // If in fallback mode, provide fallback responses for certain commands
+        if (this.fallbackMode) {
+            return this.handleFallbackCommand(command, params);
+        }
+        
         try {
-            await this.getStatus();
-            console.log('Native host connection healthy');
+            return await this.sendMessage(command, params);
         } catch (error) {
-            console.error('Native host connection health check failed:', error);
-            this.isConnected = false;
-            this.lastError = error.message;
+            console.warn(`Command ${command} failed, checking fallback options:`, error.message);
+            
+            // Handle specific command failures
+            this.handleConnectionFailure(error);
+            
+            // Try to provide fallback response
+            return this.handleFallbackCommand(command, params);
+        }
+    }
+    
+    /**
+     * Handle commands in fallback mode
+     */
+    handleFallbackCommand(command, params) {
+        switch (command) {
+            case 'GET_STATUS':
+                return {
+                    recording: {
+                        isRecording: false,
+                        isPaused: false,
+                        sessionId: null,
+                        startTime: null
+                    },
+                    connection: {
+                        isConnected: false,
+                        lastError: this.fallbackReason,
+                        fallbackMode: true
+                    },
+                    error: 'Python backend not available'
+                };
+                
+            case 'GET_CONNECTION_STATUS':
+                return {
+                    isConnected: false,
+                    lastError: this.fallbackReason,
+                    pendingMessages: this.pendingMessages.size,
+                    fallbackMode: true,
+                    hostVersion: 'Unknown'
+                };
+                
+            case 'START_RECORDING':
+                throw new Error('Cannot start recording: Python backend not available. Please install and start the MKD Automation desktop application.');
+                
+            case 'STOP_RECORDING':
+            case 'PAUSE_RECORDING':
+            case 'RESUME_RECORDING':
+                throw new Error('Cannot control recording: Python backend not available.');
+                
+            case 'PING':
+                throw new Error('Python backend not available');
+                
+            default:
+                throw new Error(`Command ${command} not available in fallback mode`);
         }
     }
 
@@ -310,9 +652,26 @@ class MKDBackgroundService {
         console.log('Background received message:', message.type);
         
         try {
-            switch (message.type) {
+            // Validate message structure
+            if (!message || typeof message !== 'object') {
+                throw new Error('Invalid message format');
+            }
+            
+            if (!message.type || typeof message.type !== 'string') {
+                throw new Error('Message type is required');
+            }
+            
+            // Validate message type
+            const messageType = SecurityUtils.validateMessageType(message.type);
+            
+            switch (messageType) {
                 case 'START_RECORDING':
-                    const startResult = await this.startRecording(message.config);
+                    // Validate recording config if provided
+                    let validatedConfig = {};
+                    if (message.config) {
+                        validatedConfig = SecurityUtils.validateRecordingConfig(message.config);
+                    }
+                    const startResult = await this.startRecording(validatedConfig);
                     sendResponse({ success: true, data: startResult });
                     break;
                     
@@ -332,7 +691,12 @@ class MKDBackgroundService {
                     break;
 
                 case 'START_PLAYBACK':
-                    const playbackResult = await this.startPlayback(message.recordingId);
+                    // Validate recording ID
+                    if (!message.recordingId) {
+                        throw new Error('Recording ID is required for playback');
+                    }
+                    const validatedRecordingId = SecurityUtils.validateRecordingId(message.recordingId);
+                    const playbackResult = await this.startPlayback(validatedRecordingId);
                     sendResponse({ success: true, data: playbackResult });
                     break;
 
@@ -352,7 +716,7 @@ class MKDBackgroundService {
                     break;
                     
                 default:
-                    console.warn('Unknown message type:', message.type);
+                    console.warn('Unknown message type:', messageType);
                     sendResponse({ success: false, error: 'Unknown message type' });
             }
         } catch (error) {

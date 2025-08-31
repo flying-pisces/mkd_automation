@@ -438,3 +438,65 @@ body {
         padding: 15px;
     }
 }
+
+/* Fallback Mode Styles */
+.fallback-message {
+    background: linear-gradient(135deg, #ffa726, #ff9800);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    display: none;
+}
+
+.fallback-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.fallback-content p {
+    margin: 8px 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.fallback-content ol {
+    margin: 10px 0;
+    padding-left: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.fallback-content li {
+    margin: 5px 0;
+}
+
+.fallback-actions {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.retry-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.retry-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.retry-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

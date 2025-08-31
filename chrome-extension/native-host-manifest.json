@@ -1,0 +1,9 @@
+{
+  "name": "com.mkd.automation",
+  "description": "MKD Automation Native Messaging Host",
+  "path": "C:\\project\\mkd_automation\\bin\\mkd_native_host.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://*/"
+  ]
+}
