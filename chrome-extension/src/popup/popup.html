@@ -157,8 +157,14 @@
         </div>
     </div>
     
+    <script src="../debug/verbose_logger.js"></script>
     <script src="../debug/debug_logger.js"></script>
     <script src="../debug/connection_diagnostic.js"></script>
+    <script>
+        // Enable verbose logging
+        VerboseLogger.setLevel(4);
+        debugLogger.setVerboseLogger(VerboseLogger);
+    </script>
     <script src="popup.js"></script>
 </body>
 </html>

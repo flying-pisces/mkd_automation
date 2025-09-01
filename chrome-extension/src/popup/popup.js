@@ -1113,7 +1113,7 @@ class MKDPopupController {
             
             // Insert after status section
             const statusSection = document.querySelector('.status-section');
-            if (.statusSection) {
+            if (statusSection) {
                 statusSection.appendChild(progressBar);
             }
         }

@@ -9,6 +9,12 @@
  * - Extension lifecycle events
  */
 
+importScripts('./debug/verbose_logger.js', './debug/debug_logger.js');
+
+// Enable verbose logging
+VerboseLogger.setLevel(4);
+debugLogger.setVerboseLogger(VerboseLogger);
+
 /**
  * Input validation and sanitization utilities
  */
@@ -168,10 +174,10 @@ class NativeMessagingHandler {
             this.lastError = null;
             this.exitFallbackMode();
             
-            // console.log(`Health check successful (${responseTime}ms)`);  // Commented for production
+            debugLogger.info(`Health check successful (${responseTime}ms)`);
             
         } catch (error) {
-            console.error('Health check failed:', error);
+            debugLogger.error('Health check failed:', error);
             this.handleConnectionFailure(error);
         }
     }
@@ -183,23 +189,23 @@ class NativeMessagingHandler {
         this.isConnected = false;
         this.lastError = error.message;
         
-        console.warn(`Connection failure: ${error.message}`);
+        debugLogger.warn(`Connection failure: ${error.message}`);
         
         // Try to recover connection
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
-            // console.log(`Connection recovery attempt ${attempt}/${this.maxRetries}`);  // Commented for production
+            debugLogger.info(`Connection recovery attempt ${attempt}/${this.maxRetries}`);
             
             await this.sleep(this.retryDelay * Math.pow(this.backoffMultiplier, attempt - 1));
             
             try {
                 await this.sendMessage('PING');
-                // console.log('Connection recovery successful');  // Commented for production
+                debugLogger.info('Connection recovery successful');
                 this.isConnected = true;
                 this.lastError = null;
                 this.exitFallbackMode();
                 return;
             } catch (retryError) {
-                console.warn(`Recovery attempt ${attempt} failed:`, retryError.message);
+                debugLogger.warn(`Recovery attempt ${attempt} failed:`, retryError.message);
             }
         }
         
@@ -219,7 +225,7 @@ class NativeMessagingHandler {
         this.fallbackReason = reason;
         this.isConnected = false;
         
-        console.warn('Entering fallback mode:', reason);
+        debugLogger.warn('Entering fallback mode:', reason);
         
         // Notify all components about fallback mode
         this.notifyFallbackMode(true, reason);
@@ -236,7 +242,7 @@ class NativeMessagingHandler {
         this.fallbackMode = false;
         this.fallbackReason = null;
         
-        // console.log('Exiting fallback mode - connection restored');  // Commented for production
+        debugLogger.info('Exiting fallback mode - connection restored');
         
         // Notify all components about restored connection
         this.notifyFallbackMode(false, null);
@@ -380,7 +386,7 @@ class NativeMessagingHandler {
     handleNativeResponse(messageId, response) {
         const pendingMessage = this.pendingMessages.get(messageId);
         if (!pendingMessage) {
-            console.warn('Received response for unknown message:', messageId);
+            debugLogger.warn('Received response for unknown message:', messageId);
             return;
         }
         
@@ -449,7 +455,7 @@ class NativeMessagingHandler {
         try {
             return await this.sendMessage(command, params);
         } catch (error) {
-            console.warn(`Command ${command} failed, checking fallback options:`, error.message);
+            debugLogger.warn(`Command ${command} failed, checking fallback options:`, error.message);
             
             // Handle specific command failures
             this.handleConnectionFailure(error);
@@ -522,7 +528,7 @@ class NativeMessagingHandler {
     }
 
     async startPlayback(recordingId) {
-        // console.log(`Starting playback for recording ID: ${recordingId}`);  // Commented for production
+        debugLogger.info(`Starting playback for recording ID: ${recordingId}`);
         // This is a placeholder for the actual implementation
         return this.sendMessage('START_PLAYBACK', { recordingId });
     }
@@ -581,7 +587,7 @@ class MKDBackgroundService {
         this.initializeEventListeners();
         this.initializeKeyboardShortcuts();
         
-        // console.log('MKD Automation background service initialized');  // Commented for production
+        debugLogger.info('MKD Automation background service initialized');
     }
     
     /**
@@ -628,7 +634,7 @@ class MKDBackgroundService {
      * Handle extension installation
      */
     handleInstall(details) {
-        // console.log('MKD Automation installed:', details);  // Commented for production
+        debugLogger.info('MKD Automation installed:', details);
         
         // Set initial badge
         this.updateBadge('', '#808080');
@@ -641,7 +647,7 @@ class MKDBackgroundService {
             this.showWelcomeNotification();
         } else if (details.reason === 'update') {
             // Extension update
-            // console.log(`Updated from ${details.previousVersion} to ${chrome.runtime.getManifest().version}`);  // Commented for production
+            debugLogger.info(`Updated from ${details.previousVersion} to ${chrome.runtime.getManifest().version}`);
         }
     }
     
@@ -649,7 +655,7 @@ class MKDBackgroundService {
      * Handle messages from other parts of the extension
      */
     async handleMessage(message, sender, sendResponse) {
-        // console.log('Background received message:', message.type);  // Commented for production
+        debugLogger.info('Background received message:', message.type);
         
         try {
             // Validate message structure
@@ -716,11 +722,11 @@ class MKDBackgroundService {
                     break;
                     
                 default:
-                    console.warn('Unknown message type:', messageType);
+                    debugLogger.warn('Unknown message type:', messageType);
                     sendResponse({ success: false, error: 'Unknown message type' });
             }
         } catch (error) {
-            console.error('Error handling message:', error);
+            debugLogger.error('Error handling message:', error);
             sendResponse({ success: false, error: error.message });
         }
     }
@@ -729,7 +735,7 @@ class MKDBackgroundService {
      * Handle keyboard commands
      */
     async handleCommand(command) {
-        // console.log('Keyboard command:', command);  // Commented for production
+        debugLogger.info('Keyboard command:', command);
         
         switch (command) {
             case 'stop_recording':
@@ -738,14 +744,14 @@ class MKDBackgroundService {
                         await this.stopRecording();
                         this.showNotification('Recording stopped via keyboard shortcut');
                     } catch (error) {
-                        console.error('Failed to stop recording via shortcut:', error);
+                        debugLogger.error('Failed to stop recording via shortcut:', error);
                         this.showNotification('Failed to stop recording', 'error');
                     }
                 }
                 break;
                 
             default:
-                console.warn('Unknown command:', command);
+                debugLogger.warn('Unknown command:', command);
         }
     }
     
@@ -776,11 +782,11 @@ class MKDBackgroundService {
                 sessionId: result.sessionId
             });
             
-            // console.log('Recording started:', result.sessionId);  // Commented for production
+            debugLogger.info('Recording started:', result.sessionId);
             return result;
             
         } catch (error) {
-            console.error('Failed to start recording:', error);
+            debugLogger.error('Failed to start recording:', error);
             this.updateBadge('ERR', '#FF8800');
             throw error;
         }
@@ -813,11 +819,11 @@ class MKDBackgroundService {
                 result: result
             });
             
-            // console.log('Recording stopped:', result);  // Commented for production
+            debugLogger.info('Recording stopped:', result);
             return result;
             
         } catch (error) {
-            console.error('Failed to stop recording:', error);
+            debugLogger.error('Failed to stop recording:', error);
             this.updateBadge('ERR', '#FF8800');
             throw error;
         }
@@ -832,7 +838,7 @@ class MKDBackgroundService {
             this.updateBadge('PLAY', '#3498db');
             return result;
         } catch (error) {
-            console.error('Failed to start playback:', error);
+            debugLogger.error('Failed to start playback:', error);
             this.updateBadge('ERR', '#FF8800');
             throw error;
         }
@@ -859,7 +865,7 @@ class MKDBackgroundService {
             return result;
             
         } catch (error) {
-            console.error('Failed to pause recording:', error);
+            debugLogger.error('Failed to pause recording:', error);
             throw error;
         }
     }
@@ -885,7 +891,7 @@ class MKDBackgroundService {
             return result;
             
         } catch (error) {
-            console.error('Failed to resume recording:', error);
+            debugLogger.error('Failed to resume recording:', error);
             throw error;
         }
     }
@@ -906,7 +912,7 @@ class MKDBackgroundService {
             };
             
         } catch (error) {
-            console.error('Failed to get status:', error);
+            debugLogger.error('Failed to get status:', error);
             return {
                 recording: this.recordingState,
                 session: this.currentSession,
@@ -937,7 +943,7 @@ class MKDBackgroundService {
                 });
             }
         } catch (error) {
-            console.error('Failed to broadcast to tabs:', error);
+            debugLogger.error('Failed to broadcast to tabs:', error);
         }
     }
     
@@ -945,7 +951,7 @@ class MKDBackgroundService {
      * Show notification to user
      */
     showNotification(message, type = 'info') {
-        // console.log(`[${type.toUpperCase()}] ${message}`);  // Commented for production
+        debugLogger.info(`[${type.toUpperCase()}] ${message}`);
         // Note: Notifications require permission in manifest
     }
     
@@ -953,7 +959,7 @@ class MKDBackgroundService {
      * Show welcome notification on first install
      */
     showWelcomeNotification() {
-        // console.log('MKD Automation installed successfully! Click the extension icon to start recording.');  // Commented for production
+        debugLogger.info('MKD Automation installed successfully! Click the extension icon to start recording.');
     }
     
     /**
@@ -962,10 +968,10 @@ class MKDBackgroundService {
     async checkNativeHostAvailability() {
         try {
             await this.nativeMessaging.getStatus();
-            // console.log('Native host is available');  // Commented for production
+            debugLogger.info('Native host is available');
             this.updateBadge('', '#00AA00');
         } catch (error) {
-            console.warn('Native host not available:', error.message);
+            debugLogger.warn('Native host not available:', error.message);
             this.updateBadge('!', '#FF8800');
         }
     }
@@ -1009,14 +1015,14 @@ class MKDBackgroundService {
      * Handle extension suspend
      */
     handleSuspend() {
-        // console.log('Extension suspending...');  // Commented for production
+        debugLogger.info('Extension suspending...');
         
         // Clean up native messaging
         this.nativeMessaging.cleanup();
         
         // If recording is active, try to save state
         if (this.recordingState.isRecording) {
-            console.warn('Extension suspending during active recording');
+            debugLogger.warn('Extension suspending during active recording');
             // In a real implementation, you might want to pause or stop recording
         }
     }
