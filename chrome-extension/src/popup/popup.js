@@ -4,18 +4,6 @@
  * Handles all popup UI interactions and state management.
  */
 
-// Load debug logger
-const script = document.createElement('script');
-script.src = '../debug/debug_logger.js';
-document.head.appendChild(script);
-
-// Wait for logger to load
-setTimeout(() => {
-    if (typeof debugLogger !== 'undefined') {
-        debugLogger.info('Popup script loaded with debug logging');
-    }
-}, 100);
-
 class MKDPopupController {
     constructor() {
         this.isRecording = false;
@@ -1125,7 +1113,7 @@ class MKDPopupController {
             
             // Insert after status section
             const statusSection = document.querySelector('.status-section');
-            if (statusSection) {
+            if (.statusSection) {
                 statusSection.appendChild(progressBar);
             }
         }
