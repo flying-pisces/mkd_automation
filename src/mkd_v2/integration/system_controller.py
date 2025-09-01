@@ -145,10 +145,14 @@ class SystemController:
             await self._execute_startup_hooks()
             
             # Start lifecycle manager
-            await self.lifecycle_manager.initialize()
+            await self.lifecycle_manager.initialize_system()
             
             # Start event bus
             await self.event_bus.start()
+            
+            # Auto-discover components from the mkd_v2 package
+            discovered_count = self.component_registry.auto_discover_components("mkd_v2")
+            logger.info(f"Auto-discovered {discovered_count} components")
             
             # Discover and register components
             await self._discover_components()
@@ -199,7 +203,7 @@ class SystemController:
             
             # Stop core services
             await self.event_bus.stop()
-            await self.lifecycle_manager.shutdown()
+            await self.lifecycle_manager.stop_system()
             
             # Execute shutdown hooks
             await self._execute_shutdown_hooks()
@@ -254,6 +258,10 @@ class SystemController:
         # Get all registered components
         registered_components = self.component_registry.get_all_components()
         
+        if not registered_components:
+            logger.info("No components registered - running in minimal mode")
+            return
+        
         for component_id, reg_info in registered_components.items():
             try:
                 # Create component instance
@@ -290,6 +298,10 @@ class SystemController:
     async def _start_components(self) -> None:
         """Start components in dependency order"""
         logger.info("Starting system components...")
+        
+        if not self.components:
+            logger.info("No components to start - minimal mode active")
+            return
         
         # Calculate startup order based on dependencies
         startup_order = self._calculate_dependency_order()

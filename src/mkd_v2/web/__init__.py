@@ -3,7 +3,7 @@ MKD Web Enhancement Module
 
 Provides advanced web automation capabilities:
 - Deep DOM inspection and manipulation
-- Advanced Chrome extension integration
+- Browser automation and management
 - Multi-tab coordination and management
 - JavaScript injection and custom scripting
 - Unified web automation engine

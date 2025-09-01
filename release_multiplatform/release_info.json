@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "build_date": "2025-09-01T12:51:54.953064",
+  "platform": "darwin_arm64",
+  "python_version": "3.12.7",
+  "files": [
+    {
+      "name": "MKD_Automation_Standalone_macOS_arm64_v2.0.0.zip",
+      "size": 63655086,
+      "type": "zip"
+    },
+    {
+      "name": "MKD_Automation_macOS_arm64_v2.0.0.zip",
+      "size": 88472292,
+      "type": "zip"
+    },
+    {
+      "name": "MKD_Automation_macOS_arm64_v2.0.0.dmg",
+      "size": 80311969,
+      "type": "dmg"
+    }
+  ]
+}

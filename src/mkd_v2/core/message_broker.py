@@ -1,7 +1,7 @@
 """
 Message Broker - Central communication hub for MKD Automation Platform v2.0.
 
-Handles message routing between Chrome extension and native components,
+Handles message routing between application components,
 event publishing/subscribing, and command dispatch with middleware support.
 """
 

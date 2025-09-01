@@ -23,7 +23,6 @@ class Day1TestRunner:
             'end_time': None,
             'duration': None,
             'python_tests': {},
-            'chrome_tests': {},
             'coverage': {},
             'summary': {}
         }
@@ -37,7 +36,6 @@ class Day1TestRunner:
         day1_test_files = [
             'tests/unit/core/test_message_broker.py',
             'tests/unit/platform/test_detector.py',
-            'tests/unit/chrome_extension/test_messaging.py',
         ]
         
         cmd = [

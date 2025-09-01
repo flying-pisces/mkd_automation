@@ -1,0 +1,42 @@
+{
+  "debug_mode": false,
+  "auto_save": true,
+  "capture_mouse": true,
+  "capture_keyboard": true,
+  "capture_screen": false,
+  "playback_speed": 1.0,
+  "max_recording_time": 300,
+  "output_directory": "~/MKD_Recordings",
+  "show_border": true,
+  "border_color": "#FF0000",
+  "minimize_to_tray": true,
+  "system_controller": {
+    "debug_mode": false,
+    "log_level": "INFO",
+    "max_workers": 10,
+    "health_check_interval": 30.0,
+    "performance_monitoring": true,
+    "auto_recovery": true,
+    "component_timeout": 30.0,
+    "event_queue_size": 1000
+  },
+  "recording": {
+    "mouse_sample_rate": 60,
+    "keyboard_capture": true,
+    "screen_events": true,
+    "auto_save": false,
+    "compression": true
+  },
+  "playback": {
+    "default_speed": 1.0,
+    "error_tolerance": "medium",
+    "retry_count": 3,
+    "wait_timeout": 10.0
+  },
+  "ui": {
+    "theme": "system",
+    "show_tooltips": true,
+    "confirm_actions": true,
+    "minimize_to_tray": true
+  }
+}

@@ -21,8 +21,8 @@ class TestMessageBroker:
         return MessageBroker()
     
     @pytest.fixture
-    def sample_chrome_message(self):
-        """Sample Chrome extension message."""
+    def sample_message(self):
+        """Sample application message."""
         return {
             "id": "msg-12345",
             "command": "START_RECORDING",
@@ -79,7 +79,7 @@ class TestMessageBroker:
         assert command in message_broker.command_handlers
         assert message_broker.command_handlers[command] == command_handler
     
-    def test_dispatch_command_success(self, message_broker, sample_chrome_message):
+    def test_dispatch_command_success(self, message_broker, sample_message):
         """Test successful command dispatch."""
         # Arrange
         def mock_handler(message):
@@ -93,11 +93,11 @@ class TestMessageBroker:
         message_broker.register_command("START_RECORDING", mock_handler)
         
         # Act
-        response = message_broker.dispatch_command(sample_chrome_message)
+        response = message_broker.dispatch_command(sample_message)
         
         # Assert
         assert response["status"] == "SUCCESS"
-        assert response["id"] == sample_chrome_message["id"]
+        assert response["id"] == sample_message["id"]
         assert "data" in response
         assert "timestamp" in response
     
@@ -118,7 +118,7 @@ class TestMessageBroker:
         assert response["id"] == unknown_message["id"]
         assert "Unknown command" in response["error"]
     
-    def test_dispatch_command_handler_exception(self, message_broker, sample_chrome_message):
+    def test_dispatch_command_handler_exception(self, message_broker, sample_message):
         """Test command dispatch with handler exception."""
         # Arrange
         def failing_handler(message):
@@ -127,11 +127,11 @@ class TestMessageBroker:
         message_broker.register_command("START_RECORDING", failing_handler)
         
         # Act
-        response = message_broker.dispatch_command(sample_chrome_message)
+        response = message_broker.dispatch_command(sample_message)
         
         # Assert
         assert response["status"] == "ERROR"
-        assert response["id"] == sample_chrome_message["id"]
+        assert response["id"] == sample_message["id"]
         assert "Handler failed" in response["error"]
     
     def test_async_event_publishing(self, message_broker):

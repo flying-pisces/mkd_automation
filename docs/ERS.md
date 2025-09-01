@@ -9,22 +9,15 @@
 
 ## 1. Executive Summary
 
-MKD Automation Platform is a comprehensive browser-integrated automation tool that captures, analyzes, and reproduces user interactions across desktop applications. The system launches via Chrome extension and provides intelligent recording with visual feedback, context-aware action capture, and secure playback capabilities.
+MKD Automation Platform is a comprehensive automation tool that captures, analyzes, and reproduces user interactions across desktop applications. The system provides intelligent recording with visual feedback, context-aware action capture, and secure playback capabilities.
 
 ## 2. System Architecture
 
 ### 2.1 Component Overview
 
 ```
-┌─────────────────────┐
-│  Chrome Extension   │
-│  - Launch trigger   │
-│  - Status display   │
-└──────────┬──────────┘
-           │
-           v
 ┌─────────────────────────────────────────────┐
-│         Native Host Application              │
+│         MKD Automation Application           │
 ├─────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐        │
 │  │   Recording  │  │   Display    │        │
@@ -45,8 +38,8 @@ MKD Automation Platform is a comprehensive browser-integrated automation tool th
 
 ### 2.2 Technology Stack
 
-- **Chrome Extension**: Manifest V3, TypeScript
-- **Native Host**: Python 3.9+, Native Messaging Protocol
+- **GUI Application**: Python 3.9+, PyQt6/Tkinter
+- **Web Interface**: Flask/FastAPI with WebSocket support
 - **UI Overlay**: PyQt6 / Tkinter with transparency support
 - **Video Recording**: OpenCV + FFmpeg
 - **Context Detection**: psutil + platform-specific APIs
@@ -58,14 +51,14 @@ MKD Automation Platform is a comprehensive browser-integrated automation tool th
 ### 3.1 Launch Mechanism (FR-001)
 
 **Priority:** High  
-**Description:** System launch through Chrome extension with native messaging
+**Description:** System launch through GUI application or web interface
 
 #### Requirements:
-- FR-001.1: Chrome extension with minimal permissions
-- FR-001.2: Native messaging host registration
+- FR-001.1: GUI application launch with system tray integration
+- FR-001.2: Web interface accessibility
 - FR-001.3: Launch confirmation alert with 3-second countdown
 - FR-001.4: Automatic health check on launch
-- FR-001.5: Fallback to system tray if extension fails
+- FR-001.5: System tray integration for background operation
 
 #### Test Scenarios:
 - Launch from extension with native app not running
@@ -103,7 +96,7 @@ MKD Automation Platform is a comprehensive browser-integrated automation tool th
 - FR-003.1: Ctrl+Shift+R to stop recording (configurable)
 - FR-003.2: Floating stop button with timer
 - FR-003.3: System tray stop option
-- FR-003.4: Chrome extension stop button
+- FR-003.4: GUI stop button
 - FR-003.5: Auto-stop on system events (shutdown/sleep)
 - FR-003.6: Pause/Resume capability
 
@@ -338,7 +331,7 @@ CREATE TABLE audit_log (
 
 ## 6. Interface Requirements
 
-### 6.1 Chrome Extension API
+### 6.1 Web API
 ```typescript
 interface RecordingAPI {
     startRecording(options?: RecordingOptions): Promise<void>;
@@ -349,7 +342,7 @@ interface RecordingAPI {
 }
 ```
 
-### 6.2 Native Messaging Protocol
+### 6.2 WebSocket Protocol
 ```json
 {
     "action": "START_RECORDING",
@@ -371,7 +364,7 @@ interface RecordingAPI {
 - Edge case validation
 
 ### 7.2 Integration Testing
-- Chrome extension ↔ Native host
+- Web client ↔ Backend server
 - Recording → Storage → Playback
 - Cross-platform compatibility
 
@@ -388,7 +381,7 @@ interface RecordingAPI {
 ## 8. Development Phases
 
 ### Phase 1: Core Foundation (Weeks 1-4)
-- Chrome extension scaffold
+- GUI application scaffold
 - Native messaging setup
 - Basic recording engine
 - Visual indicators

@@ -161,14 +161,88 @@ class CommandConsole:
     def _run_command_async(self, command):
         """Run command asynchronously"""
         try:
-            # This would integrate with the actual CLI command system
-            result = f"Command '{command}' executed (GUI mode)\n"
+            command = command.strip().lower()
             
-            # Simulate command execution
-            time.sleep(0.5)
-            
-            # Add result to output
-            self._append_output(result + "\n")
+            if command == "help":
+                help_text = """Available commands:
+help        - Show this help message
+status      - Show system status
+start       - Start the system
+stop        - Stop the system  
+restart     - Restart the system
+clear       - Clear console output
+"""
+                self._append_output(help_text + "\n")
+                
+            elif command == "status":
+                if self.command_handler:
+                    status = self.command_handler.status.value if hasattr(self.command_handler, 'status') else 'Unknown'
+                    self._append_output(f"System Status: {status}\n\n")
+                else:
+                    self._append_output("No system controller available\n\n")
+                    
+            elif command == "start":
+                if self.command_handler:
+                    self._append_output("🔄 Starting system via command...\n")
+                    import asyncio
+                    try:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        success = loop.run_until_complete(self.command_handler.start_system())
+                        loop.close()
+                        if success:
+                            self._append_output("✅ System started successfully\n\n")
+                        else:
+                            self._append_output("❌ System start failed\n\n")
+                    except Exception as e:
+                        self._append_output(f"❌ Start error: {e}\n\n")
+                else:
+                    self._append_output("No system controller available\n\n")
+                    
+            elif command == "stop":
+                if self.command_handler:
+                    self._append_output("🔄 Stopping system via command...\n")
+                    import asyncio
+                    try:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        success = loop.run_until_complete(self.command_handler.stop_system())
+                        loop.close()
+                        if success:
+                            self._append_output("✅ System stopped successfully\n\n")
+                        else:
+                            self._append_output("❌ System stop failed\n\n")
+                    except Exception as e:
+                        self._append_output(f"❌ Stop error: {e}\n\n")
+                else:
+                    self._append_output("No system controller available\n\n")
+                    
+            elif command == "restart":
+                if self.command_handler:
+                    self._append_output("🔄 Restarting system via command...\n")
+                    import asyncio
+                    try:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        success = loop.run_until_complete(self.command_handler.restart_system())
+                        loop.close()
+                        if success:
+                            self._append_output("✅ System restarted successfully\n\n")
+                        else:
+                            self._append_output("❌ System restart failed\n\n")
+                    except Exception as e:
+                        self._append_output(f"❌ Restart error: {e}\n\n")
+                else:
+                    self._append_output("No system controller available\n\n")
+                    
+            elif command == "clear":
+                self.output_area.config(state="normal")
+                self.output_area.delete(1.0, tk.END)
+                self.output_area.config(state="disabled")
+                self._append_output("MKD Command Console Ready\nType 'help' for available commands\n\n")
+                
+            else:
+                self._append_output(f"Unknown command: '{command}'\nType 'help' for available commands\n\n")
             
         except Exception as e:
             self._append_output(f"Command failed: {e}\n\n")
@@ -212,13 +286,13 @@ class ConfigurationPanel:
         self.buttons_frame.grid(row=row, column=0, pady=10)
         
         # Load/Save buttons
-        ttk.Button(self.buttons_frame, text="Load Config", command=self._load_config).pack(side="left", padx=(0, 5))
+        ttk.Button(self.buttons_frame, text="Load Config", command=lambda: self._load_config(show_messages=True)).pack(side="left", padx=(0, 5))
         ttk.Button(self.buttons_frame, text="Save Config", command=self._save_config).pack(side="left")
         
         # Load initial config
         self._load_config()
     
-    def _load_config(self):
+    def _load_config(self, show_messages=False):
         """Load configuration"""
         try:
             config_file = Path.home() / ".mkd" / "cli_config.json"
@@ -232,12 +306,98 @@ class ConfigurationPanel:
                     if key in config:
                         var.set(config[key])
                 
-                messagebox.showinfo("Success", "Configuration loaded successfully")
+                if show_messages:
+                    messagebox.showinfo("Success", "Configuration loaded successfully")
+                return True
             else:
-                messagebox.showwarning("Warning", "No configuration file found")
+                # Create default configuration on first run
+                self._create_default_config()
+                if show_messages:
+                    messagebox.showinfo("Info", "Default configuration created")
+                return False
                 
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to load configuration: {e}")
+            if show_messages:
+                messagebox.showerror("Error", f"Failed to load configuration: {e}")
+            logger.error(f"Failed to load configuration: {e}")
+            return False
+    
+    def _create_default_config(self):
+        """Create default configuration with sensible defaults"""
+        try:
+            config_file = Path.home() / ".mkd" / "cli_config.json"
+            config_file.parent.mkdir(exist_ok=True)
+            
+            # Try to load embedded default config first
+            default_config = self._load_embedded_config()
+            
+            # Fallback to hardcoded defaults if embedded config not available
+            if not default_config:
+                default_config = {
+                    "debug_mode": False,
+                    "auto_save": True,
+                    "capture_mouse": True,
+                    "capture_keyboard": True,
+                    "capture_screen": False,
+                    "playback_speed": 1.0,
+                    "max_recording_time": 300,
+                    "output_directory": str(Path.home() / "MKD_Recordings"),
+                    "show_border": True,
+                    "border_color": "#FF0000",
+                    "minimize_to_tray": True
+                }
+            
+            # Set default values in GUI
+            for key, value in default_config.items():
+                if key in self.config_vars:
+                    if isinstance(value, bool):
+                        self.config_vars[key].set(value)
+                    elif isinstance(value, (int, float)):
+                        self.config_vars[key].set(str(value))
+                    else:
+                        self.config_vars[key].set(value)
+            
+            # Save default config file
+            with open(config_file, 'w') as f:
+                json.dump(default_config, f, indent=2)
+            
+            logger.info("Default configuration created successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to create default configuration: {e}")
+    
+    def _load_embedded_config(self):
+        """Load embedded default configuration from bundled file"""
+        try:
+            import sys
+            import os
+            
+            # Get the resource path (works for both development and PyInstaller)
+            if getattr(sys, 'frozen', False):
+                # PyInstaller bundle
+                bundle_dir = sys._MEIPASS
+                config_path = os.path.join(bundle_dir, 'mkd_v2', 'config', 'default_config.json')
+            else:
+                # Development environment
+                config_path = Path(__file__).parent.parent / 'config' / 'default_config.json'
+            
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    embedded_config = json.load(f)
+                    
+                # Expand home directory paths
+                if 'output_directory' in embedded_config:
+                    embedded_config['output_directory'] = str(Path(embedded_config['output_directory']).expanduser())
+                
+                logger.info(f"Loaded embedded configuration from {config_path}")
+                return embedded_config
+            else:
+                logger.warning(f"Embedded config not found at {config_path}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Failed to load embedded configuration: {e}")
+            return None
     
     def _save_config(self):
         """Save configuration"""
@@ -359,7 +519,7 @@ class GUILauncher:
         self._create_control_panel()
         
         # Add command console to right panel
-        self.command_console = CommandConsole(self.right_panel)
+        self.command_console = CommandConsole(self.right_panel, command_handler=self.system_controller)
         
         # Start system monitoring
         self.system_monitor.start_monitoring()
@@ -372,28 +532,28 @@ class GUILauncher:
         self.control_frame.pack(fill="x", padx=5, pady=5)
         
         # System control buttons
-        button_config = {"width": 15, "pady": 2}
+        button_config = {"width": 15}
         
         ttk.Button(
             self.control_frame, 
             text="Start System", 
             command=self._start_system,
             **button_config
-        ).pack(fill="x")
+        ).pack(fill="x", pady=2)
         
         ttk.Button(
             self.control_frame, 
             text="Stop System", 
             command=self._stop_system,
             **button_config
-        ).pack(fill="x")
+        ).pack(fill="x", pady=2)
         
         ttk.Button(
             self.control_frame, 
             text="Restart System", 
             command=self._restart_system,
             **button_config
-        ).pack(fill="x")
+        ).pack(fill="x", pady=2)
         
         ttk.Separator(self.control_frame, orient="horizontal").pack(fill="x", pady=5)
         
@@ -402,14 +562,14 @@ class GUILauncher:
             text="System Status", 
             command=self._show_system_status,
             **button_config
-        ).pack(fill="x")
+        ).pack(fill="x", pady=2)
         
         ttk.Button(
             self.control_frame, 
             text="View Logs", 
             command=self._show_logs,
             **button_config
-        ).pack(fill="x")
+        ).pack(fill="x", pady=2)
     
     def run(self):
         """Start the GUI application"""
@@ -423,18 +583,32 @@ class GUILauncher:
         def start_async():
             try:
                 if self.system_controller:
-                    # This would actually start the system
-                    success = True  # Placeholder
+                    self.command_console._append_output("🔄 Starting system...\n")
+                    
+                    # Use asyncio to run the async start_system method
+                    import asyncio
+                    try:
+                        # Create new event loop for this thread
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        success = loop.run_until_complete(self.system_controller.start_system())
+                        loop.close()
+                    except Exception as async_error:
+                        logger.error(f"Async start failed: {async_error}")
+                        success = False
                     
                     if success:
                         messagebox.showinfo("Success", "System started successfully")
                         self.command_console._append_output("✅ System started\n\n")
                     else:
                         messagebox.showerror("Error", "Failed to start system")
+                        self.command_console._append_output("❌ System start failed\n\n")
                 else:
                     messagebox.showwarning("Warning", "No system controller available")
+                    self.command_console._append_output("⚠️ No system controller available\n\n")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to start system: {e}")
+                self.command_console._append_output(f"❌ Error: {e}\n\n")
         
         threading.Thread(target=start_async, daemon=True).start()
     
@@ -444,18 +618,31 @@ class GUILauncher:
             def stop_async():
                 try:
                     if self.system_controller:
-                        # This would actually stop the system
-                        success = True  # Placeholder
+                        self.command_console._append_output("🔄 Stopping system...\n")
+                        
+                        # Use asyncio to run the async stop_system method
+                        import asyncio
+                        try:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            success = loop.run_until_complete(self.system_controller.stop_system())
+                            loop.close()
+                        except Exception as async_error:
+                            logger.error(f"Async stop failed: {async_error}")
+                            success = False
                         
                         if success:
                             messagebox.showinfo("Success", "System stopped successfully")
                             self.command_console._append_output("✅ System stopped\n\n")
                         else:
                             messagebox.showerror("Error", "Failed to stop system")
+                            self.command_console._append_output("❌ System stop failed\n\n")
                     else:
                         messagebox.showwarning("Warning", "No system controller available")
+                        self.command_console._append_output("⚠️ No system controller available\n\n")
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to stop system: {e}")
+                    self.command_console._append_output(f"❌ Error: {e}\n\n")
             
             threading.Thread(target=stop_async, daemon=True).start()
     
@@ -465,18 +652,31 @@ class GUILauncher:
             def restart_async():
                 try:
                     if self.system_controller:
-                        # This would actually restart the system
-                        success = True  # Placeholder
+                        self.command_console._append_output("🔄 Restarting system...\n")
+                        
+                        # Use asyncio to run the async restart_system method
+                        import asyncio
+                        try:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            success = loop.run_until_complete(self.system_controller.restart_system())
+                            loop.close()
+                        except Exception as async_error:
+                            logger.error(f"Async restart failed: {async_error}")
+                            success = False
                         
                         if success:
                             messagebox.showinfo("Success", "System restarted successfully")
                             self.command_console._append_output("✅ System restarted\n\n")
                         else:
                             messagebox.showerror("Error", "Failed to restart system")
+                            self.command_console._append_output("❌ System restart failed\n\n")
                     else:
                         messagebox.showwarning("Warning", "No system controller available")
+                        self.command_console._append_output("⚠️ No system controller available\n\n")
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to restart system: {e}")
+                    self.command_console._append_output(f"❌ Error: {e}\n\n")
             
             threading.Thread(target=restart_async, daemon=True).start()
     

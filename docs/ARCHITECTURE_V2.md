@@ -15,7 +15,7 @@
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          Browser Environment                                 │
 │  ┌─────────────────────┐                                                    │
-│  │  Chrome Extension   │                                                    │
+│  │   GUI Application   │                                                    │
 │  │  ┌─────────────────┐│                                                    │
 │  │  │   Popup UI      ││  ┌─────────────────┐                             │
 │  │  │  - Start/Stop   ││  │  Content Script │                             │
@@ -95,7 +95,7 @@
 
 ## 2. Component Architecture
 
-### 2.1 Chrome Extension Layer
+### 2.1 GUI Application Layer
 
 #### 2.1.1 Manifest Structure
 
@@ -631,10 +631,10 @@ class RecordingFormat:
 [Logger Service] → [Audit Trail]
 ```
 
-### 3.3 Chrome Extension Communication Flow
+### 3.3 Application Communication Flow
 
 ```
-[Chrome Extension UI]
+[GUI Application]
     ↓ (user click)
 [Background Script] → [Command Validation]
     ↓

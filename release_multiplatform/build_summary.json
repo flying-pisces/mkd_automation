@@ -1,0 +1,44 @@
+{
+  "build_date": "2025-09-01T12:51:55.552735",
+  "platforms": [
+    "macOS"
+  ],
+  "files": [
+    {
+      "name": "MKD_Automation_Standalone_macOS_arm64_v2.0.0.zip",
+      "size": 63655086,
+      "size_mb": 60.7
+    },
+    {
+      "name": "MKD_Automation_macOS_arm64_v2.0.0.zip",
+      "size": 88472292,
+      "size_mb": 84.4
+    },
+    {
+      "name": "MKD_Automation_macOS_arm64_v2.0.0.dmg",
+      "size": 80311969,
+      "size_mb": 76.6
+    }
+  ],
+  "total_size": 232439347,
+  "build_log": [
+    "[12:50:49] INFO: \ud83e\uddf9 Cleaning previous builds...",
+    "[12:50:49] INFO:    Removed build/",
+    "[12:50:50] INFO:    Removed dist/",
+    "[12:50:50] INFO:    Removed release/",
+    "[12:50:50] INFO: \ud83d\udd28 Building for current platform: darwin",
+    "[12:51:54] INFO: \u2705 Current platform build successful",
+    "[12:51:54] INFO:    Copied MKD_Automation_Standalone_macOS_arm64_v2.0.0.zip",
+    "[12:51:54] INFO:    Copied MKD_Automation_macOS_arm64_v2.0.0.zip",
+    "[12:51:55] INFO:    Copied MKD_Automation_macOS_arm64_v2.0.0.dmg",
+    "[12:51:55] INFO:    Copied README.md",
+    "[12:51:55] INFO:    Copied release_info.json",
+    "[12:51:55] INFO: \ud83d\udc27 Building Linux version with Docker...",
+    "[12:51:55] ERROR: \u274c Linux build failed: Command '['/Users/cyin/project/mkd_automation/build_linux.sh']' returned non-zero exit status 1.",
+    "[12:51:55] WARNING: \u26a0\ufe0f  Wine not available - skipping Windows build",
+    "[12:51:55] INFO: \u2699\ufe0f  Creating GitHub Actions configuration...",
+    "[12:51:55] INFO: \u2705 GitHub Actions workflow created: /Users/cyin/project/mkd_automation/.github/workflows/build-multiplatform.yml",
+    "[12:51:55] INFO: \u2705 Build instructions created: /Users/cyin/project/mkd_automation/release_multiplatform/BUILD_INSTRUCTIONS.md"
+  ],
+  "total_size_mb": 221.7
+}

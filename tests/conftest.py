@@ -26,13 +26,13 @@ def temp_dir() -> Generator[Path, None, None]:
 
 
 @pytest.fixture(scope="function")
-def mock_chrome_api():
-    """Mock Chrome extension APIs."""
-    with patch('chrome.runtime') as mock_runtime:
-        mock_runtime.sendNativeMessage = Mock()
-        mock_runtime.onMessage = Mock()
-        mock_runtime.lastError = None
-        yield mock_runtime
+def mock_web_api():
+    """Mock Web/WebSocket APIs."""
+    with patch('websocket.WebSocket') as mock_ws:
+        mock_ws.send = Mock()
+        mock_ws.recv = Mock()
+        mock_ws.close = Mock()
+        yield mock_ws
 
 
 @pytest.fixture(scope="function")
