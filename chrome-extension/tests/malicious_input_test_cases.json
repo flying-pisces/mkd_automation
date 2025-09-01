@@ -1,0 +1,107 @@
+[
+  {
+    "type": "XSS",
+    "payload": "<script>alert('XSS')</script>",
+    "should_block": true,
+    "description": "XSS attempt should be sanitized or blocked"
+  },
+  {
+    "type": "XSS",
+    "payload": "javascript:alert('XSS')",
+    "should_block": true,
+    "description": "XSS attempt should be sanitized or blocked"
+  },
+  {
+    "type": "XSS",
+    "payload": "<img src=x onerror=alert('XSS')>",
+    "should_block": true,
+    "description": "XSS attempt should be sanitized or blocked"
+  },
+  {
+    "type": "XSS",
+    "payload": "';alert(String.fromCharCode(88,83,83))//",
+    "should_block": true,
+    "description": "XSS attempt should be sanitized or blocked"
+  },
+  {
+    "type": "XSS",
+    "payload": "<svg/onload=alert('XSS')>",
+    "should_block": true,
+    "description": "XSS attempt should be sanitized or blocked"
+  },
+  {
+    "type": "XSS",
+    "payload": "&#60;script&#62;alert('XSS')&#60;/script&#62;",
+    "should_block": true,
+    "description": "XSS attempt should be sanitized or blocked"
+  },
+  {
+    "type": "XSS",
+    "payload": "<iframe src='javascript:alert(`XSS`)'></iframe>",
+    "should_block": true,
+    "description": "XSS attempt should be sanitized or blocked"
+  },
+  {
+    "type": "Injection",
+    "payload": "'; DROP TABLE users; --",
+    "should_block": true,
+    "description": "Injection attempt should be sanitized or blocked"
+  },
+  {
+    "type": "Injection",
+    "payload": "1' OR '1'='1",
+    "should_block": true,
+    "description": "Injection attempt should be sanitized or blocked"
+  },
+  {
+    "type": "Injection",
+    "payload": "../../../etc/passwd",
+    "should_block": true,
+    "description": "Injection attempt should be sanitized or blocked"
+  },
+  {
+    "type": "Injection",
+    "payload": "cmd.exe /c dir",
+    "should_block": true,
+    "description": "Injection attempt should be sanitized or blocked"
+  },
+  {
+    "type": "Injection",
+    "payload": "powershell.exe -Command Get-Process",
+    "should_block": true,
+    "description": "Injection attempt should be sanitized or blocked"
+  },
+  {
+    "type": "Injection",
+    "payload": "__proto__",
+    "should_block": true,
+    "description": "Injection attempt should be sanitized or blocked"
+  },
+  {
+    "type": "Injection",
+    "payload": "constructor",
+    "should_block": true,
+    "description": "Injection attempt should be sanitized or blocked"
+  },
+  {
+    "type": "Oversized",
+    "payload": "Large input #1 (10000 chars)",
+    "actual_size": 10000,
+    "should_block": true,
+    "description": "Oversized input should be truncated or rejected"
+  },
+  {
+    "type": "Oversized",
+    "payload": "Large input #2 (100000 chars)",
+    "actual_size": 100000,
+    "should_block": true,
+    "description": "Oversized input should be truncated or rejected"
+  },
+  {
+    "type": "Oversized",
+    "payload": "Large input #3 (5000 chars)",
+    "actual_size": 5000,
+    "should_block": true,
+    "description": "Oversized input should be truncated or rejected"
+  }
+]

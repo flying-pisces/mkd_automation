@@ -54,6 +54,7 @@ class NativeHost:
             'PAUSE_RECORDING': self._handle_pause_recording,
             'RESUME_RECORDING': self._handle_resume_recording,
             'GET_STATUS': self._handle_get_status,
+            'GET_CONNECTION_STATUS': self._handle_get_connection_status,
             'GET_CAPABILITIES': self._handle_get_capabilities,
             'AUTHENTICATE': self._handle_authenticate,
             'PING': self._handle_ping
@@ -282,6 +283,35 @@ class NativeHost:
                     'version': '2.0.0',
                     'error': str(e)
                 }
+            }
+    
+    def _handle_get_connection_status(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle get connection status command."""
+        try:
+            # Connection status for Chrome extension compatibility
+            return {
+                'isConnected': self.running,
+                'lastError': None,
+                'pendingMessages': 0,  # We don't track pending messages in this implementation
+                'hostVersion': '2.0.0',
+                'nativeMessaging': {
+                    'available': True,
+                    'protocol': 'stdio',
+                    'maxMessageSize': 1024 * 1024  # 1MB
+                },
+                'capabilities': {
+                    'recording': True,
+                    'playback': False,  # Week 3 feature
+                    'chrome_integration': True
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting connection status: {e}")
+            return {
+                'isConnected': False,
+                'lastError': str(e),
+                'pendingMessages': 0
             }
     
     def _handle_get_capabilities(self, params: Dict[str, Any]) -> Dict[str, Any]:

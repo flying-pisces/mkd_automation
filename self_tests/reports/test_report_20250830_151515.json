@@ -1,0 +1,199 @@
+{
+  "timestamp": "2025-08-30T15:15:15.353317",
+  "duration": 0.358762,
+  "platform": "Windows",
+  "python_version": "3.13.5",
+  "summary": {
+    "total": 23,
+    "passed": 21,
+    "failed": 2,
+    "skipped": 0,
+    "pass_rate": "91.3%"
+  },
+  "results": [
+    {
+      "name": "python_version",
+      "category": "environment",
+      "status": "passed",
+      "message": "Python 3.13.5",
+      "error": null,
+      "duration": 0.000143
+    },
+    {
+      "name": "package_pytest",
+      "category": "environment",
+      "status": "passed",
+      "message": "pytest installed",
+      "error": null,
+      "duration": 0.195286
+    },
+    {
+      "name": "package_msgpack",
+      "category": "environment",
+      "status": "passed",
+      "message": "msgpack installed",
+      "error": null,
+      "duration": 0.03251
+    },
+    {
+      "name": "package_cryptography",
+      "category": "environment",
+      "status": "passed",
+      "message": "cryptography installed",
+      "error": null,
+      "duration": 0.007384
+    },
+    {
+      "name": "mkd.core.config_manager",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.002915
+    },
+    {
+      "name": "mkd.core.session_manager",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.004343
+    },
+    {
+      "name": "mkd.core.script_manager",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.001038
+    },
+    {
+      "name": "mkd.recording.recording_engine",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.003924
+    },
+    {
+      "name": "mkd.recording.input_capturer",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.004246
+    },
+    {
+      "name": "mkd.playback.playback_engine",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.001267
+    },
+    {
+      "name": "mkd.playback.action_executor",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.000638
+    },
+    {
+      "name": "mkd.platform.detector",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 4.7e-05
+    },
+    {
+      "name": "mkd.data.script_storage",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.003607
+    },
+    {
+      "name": "mkd.data.encryption",
+      "category": "imports",
+      "status": "passed",
+      "message": "",
+      "error": null,
+      "duration": 0.000543
+    },
+    {
+      "name": "ConfigManager",
+      "category": "core",
+      "status": "passed",
+      "message": "Sample rate: 60 Hz",
+      "error": null,
+      "duration": 5.5e-05
+    },
+    {
+      "name": "SessionManager",
+      "category": "core",
+      "status": "passed",
+      "message": "Session ID: 6208a5f7-e1ed-4d93-8465-a27857721439",
+      "error": null,
+      "duration": 8.2e-05
+    },
+    {
+      "name": "ScriptStorage",
+      "category": "data",
+      "status": "passed",
+      "message": "Save/load working",
+      "error": null,
+      "duration": 0.011297
+    },
+    {
+      "name": "PlatformDetector",
+      "category": "platform",
+      "status": "passed",
+      "message": "Platform: Windows, Implementation: WindowsPlatform",
+      "error": null,
+      "duration": 6.9e-05
+    },
+    {
+      "name": "RecordingEngine",
+      "category": "recording",
+      "status": "passed",
+      "message": "Recording engine initialized",
+      "error": null,
+      "duration": 5.6e-05
+    },
+    {
+      "name": "PlaybackEngine",
+      "category": "playback",
+      "status": "failed",
+      "message": "",
+      "error": "cannot import name 'PlaybackEngine' from 'mkd.playback.playback_engine' (C:\\project\\mkd_automation\\self_tests\\..\\src\\mkd\\playback\\playback_engine.py)",
+      "duration": 5.2e-05
+    },
+    {
+      "name": "extension_files",
+      "category": "chrome",
+      "status": "passed",
+      "message": "All extension files present",
+      "error": null,
+      "duration": 0.000196
+    },
+    {
+      "name": "manifest_validation",
+      "category": "chrome",
+      "status": "passed",
+      "message": "Manifest v3, Extension v2.0.0",
+      "error": null,
+      "duration": 0.007938
+    },
+    {
+      "name": "end_to_end_flow",
+      "category": "integration",
+      "status": "failed",
+      "message": "",
+      "error": "'SessionManager' object has no attribute 'to_script'",
+      "duration": 0.000154
+    }
+  ]
+}

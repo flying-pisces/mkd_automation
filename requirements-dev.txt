@@ -74,7 +74,6 @@ customtkinter>=5.0.0           # Modern tkinter themes
 
 # Database (for testing and development data)
 sqlalchemy>=2.0.0              # Database ORM (if needed for advanced features)
-sqlite3                        # Built-in, but explicit for clarity
 
 # Async/Concurrency Testing
 asyncio-throttle>=1.0.0        # Rate limiting for async operations
