@@ -1,0 +1,620 @@
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+#app {
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+}
+
+.container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Recording Boundary */
+.recording-boundary {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 9999;
+    border: 5px solid #ff0000;
+    animation: pulse 1.5s infinite;
+    box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.3);
+}
+
+.recording-boundary.hidden {
+    display: none;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Title Header */
+.title-header {
+    background: #1976D2;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+.title-header h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.version {
+    font-size: 12px;
+    color: #E3F2FD;
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+}
+
+/* Status Section */
+.status-section {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.status-section h2 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+    animation: breathe 2s infinite;
+}
+
+.status-dot.ready {
+    background: #4CAF50;
+}
+
+.status-dot.recording {
+    background: #ff0000;
+    animation: blink 1s infinite;
+}
+
+.status-dot.stopped {
+    background: #ff9800;
+}
+
+@keyframes breathe {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes blink {
+    0%, 50%, 100% {
+        opacity: 1;
+    }
+    25%, 75% {
+        opacity: 0.5;
+    }
+}
+
+.status-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Controls Section */
+.controls-section, .replay-section {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+.btn-record {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-record:hover:not(:disabled) {
+    background: #45a049;
+}
+
+.btn-stop {
+    background: #f44336;
+    color: white;
+}
+
+.btn-stop:hover:not(:disabled) {
+    background: #da190b;
+}
+
+.btn-replay {
+    background: #2196F3;
+    color: white;
+}
+
+.btn-replay:hover:not(:disabled) {
+    background: #0b7dda;
+}
+
+/* Settings Section */
+.settings-section {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-section h2 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.settings-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px;
+    transition: background 0.2s;
+}
+
+.checkbox-label:hover {
+    background: #f5f5f5;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    font-size: 14px;
+    color: #555;
+}
+
+/* Statistics Section */
+.stats-section {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.stats-section h2 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.stats-content {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 5px;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #666;
+}
+
+.stat-value {
+    font-size: 13px;
+    color: #333;
+    font-weight: bold;
+}
+
+/* Events Section */
+.events-section {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.events-section h2 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.events-log {
+    background: #f8f8f8;
+    padding: 10px;
+    border-radius: 5px;
+    height: 120px;
+    overflow-y: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    color: #333;
+}
+
+.event-line {
+    margin-bottom: 4px;
+    padding: 2px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.event-timestamp {
+    color: #888;
+    margin-right: 8px;
+}
+
+/* System Information Section */
+.info-section {
+    padding: 20px;
+}
+
+.info-section h2 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.info-content {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.info-label {
+    font-size: 13px;
+    color: #666;
+}
+
+.info-value {
+    font-size: 13px;
+    color: #333;
+    font-weight: bold;
+}
+
+.info-value.connected {
+    color: #4CAF50;
+}
+
+.info-value.disconnected {
+    color: #f44336;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    background: #1976D2;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 18px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    border-radius: 3px;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* Playback Controls */
+.playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.btn-small {
+    padding: 8px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-play {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-pause {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-stop {
+    background: #f44336;
+    color: white;
+}
+
+.btn-small:hover {
+    transform: scale(1.05);
+}
+
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.speed-control label {
+    font-size: 13px;
+    color: #666;
+}
+
+.speed-control input[type="range"] {
+    width: 100px;
+}
+
+#speedValue {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    min-width: 35px;
+}
+
+.frame-info {
+    font-size: 13px;
+    color: #666;
+    margin-left: 20px;
+}
+
+/* Progress Bar */
+.progress-bar {
+    height: 20px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Replay Canvas */
+.replay-canvas-container {
+    background: #000;
+    border-radius: 5px;
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#replayCanvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.no-frames-message {
+    color: white;
+    font-size: 16px;
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .container {
+        border-radius: 0;
+        box-shadow: none;
+    }
+    
+    #app {
+        max-width: 100%;
+    }
+    
+    body {
+        padding: 0;
+    }
+    
+    .controls-section, .replay-section {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Loading Animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #1976D2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MKD Automation - Web Recorder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Red recording boundary frame -->
+        <div id="recordingBoundary" class="recording-boundary hidden"></div>
+        
+        <!-- Main Container -->
+        <div class="container">
+            <!-- Title Header -->
+            <header class="title-header">
+                <h1>MKD Automation</h1>
+                <span class="version">v2.0 - Web Recorder with Replay</span>
+            </header>
+            
+            <!-- Recording Status -->
+            <section class="status-section">
+                <h2>Recording Status</h2>
+                <div class="status-indicator">
+                    <span id="statusDot" class="status-dot ready"></span>
+                    <span id="statusText" class="status-text">Ready</span>
+                </div>
+            </section>
+            
+            <!-- Main Control Buttons -->
+            <section class="controls-section">
+                <button id="startBtn" class="btn btn-record">
+                    <span class="btn-icon">▶</span> Start Recording
+                </button>
+                <button id="stopBtn" class="btn btn-stop" disabled>
+                    <span class="btn-icon">⏹</span> Stop Recording
+                </button>
+            </section>
+            
+            <!-- Replay Controls -->
+            <section class="replay-section">
+                <button id="replayBtn" class="btn btn-replay">
+                    <span class="btn-icon">🎬</span> Replay Last Recording
+                </button>
+                <button id="openReplayBtn" class="btn btn-replay">
+                    <span class="btn-icon">📂</span> Open Recording
+                </button>
+            </section>
+            
+            <!-- Recording Settings -->
+            <section class="settings-section">
+                <h2>Recording Settings</h2>
+                <div class="settings-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="captureMouse" checked>
+                        <span>Capture Mouse</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="captureKeyboard" checked>
+                        <span>Capture Keyboard</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="captureScreenshots" checked>
+                        <span>Capture Screenshots (for Replay)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showBoundary" checked>
+                        <span>Show Red Boundary</span>
+                    </label>
+                </div>
+            </section>
+            
+            <!-- Statistics -->
+            <section class="stats-section">
+                <h2>Statistics</h2>
+                <div class="stats-content">
+                    <div class="stat-row">
+                        <span class="stat-label">Recording Duration:</span>
+                        <span id="statDuration" class="stat-value">0.0 seconds</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Actions Recorded:</span>
+                        <span id="statActions" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Capture Rate:</span>
+                        <span id="statRate" class="stat-value">0.0 actions/sec</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Screenshots:</span>
+                        <span id="statScreenshots" class="stat-value">0</span>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Recent Events -->
+            <section class="events-section">
+                <h2>Recent Events</h2>
+                <div id="eventsLog" class="events-log"></div>
+            </section>
+            
+            <!-- System Information -->
+            <section class="info-section">
+                <h2>System Information</h2>
+                <div class="info-content">
+                    <div class="info-row">
+                        <span class="info-label">Platform:</span>
+                        <span id="infoPlatform" class="info-value">Web Browser</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Browser:</span>
+                        <span id="infoBrowser" class="info-value">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Connection Status:</span>
+                        <span id="infoConnection" class="info-value">Not Connected</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Replay Modal -->
+        <div id="replayModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Replay - MKD Automation</h2>
+                    <button class="modal-close" onclick="closeReplayModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Playback Controls -->
+                    <div class="playback-controls">
+                        <button id="playBtn" class="btn-small btn-play">▶ Play</button>
+                        <button id="pauseBtn" class="btn-small btn-pause">⏸ Pause</button>
+                        <button id="stopPlaybackBtn" class="btn-small btn-stop">⏹ Stop</button>
+                        <div class="speed-control">
+                            <label>Speed:</label>
+                            <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1">
+                            <span id="speedValue">1.0x</span>
+                        </div>
+                        <div class="frame-info">
+                            <span>Frame: </span>
+                            <span id="currentFrame">0</span>
+                            <span> / </span>
+                            <span id="totalFrames">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    
+                    <!-- Canvas for replay -->
+                    <div class="replay-canvas-container">
+                        <canvas id="replayCanvas"></canvas>
+                        <div id="noFramesMessage" class="no-frames-message hidden">
+                            No screenshots found
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

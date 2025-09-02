@@ -9,7 +9,11 @@ import asyncio
 import sys
 import os
 from typing import Dict, Any, Optional, List
-import readline
+try:
+    import readline
+except ImportError:
+    # Windows compatibility - readline not available
+    readline = None
 import atexit
 from pathlib import Path
 import json
@@ -101,6 +105,11 @@ class InteractiveMode:
     def _setup_readline(self) -> None:
         """Setup readline for command history and completion"""
         
+        if readline is None:
+            # Readline not available on Windows
+            logger.debug("Readline not available, completion disabled")
+            return
+        
         try:
             # Load command history
             if self.history_file.exists():
@@ -116,12 +125,15 @@ class InteractiveMode:
             # Save history on exit
             atexit.register(self._save_history)
             
-        except ImportError:
-            # Readline not available on all platforms
-            logger.debug("Readline not available, completion disabled")
+        except Exception as e:
+            # Readline setup failed
+            logger.debug(f"Readline setup failed: {e}")
     
     def _save_history(self) -> None:
         """Save command history to file"""
+        
+        if readline is None:
+            return
         
         try:
             readline.write_history_file(str(self.history_file))
@@ -130,6 +142,9 @@ class InteractiveMode:
     
     def _complete_command(self, text: str, state: int) -> Optional[str]:
         """Command completion handler"""
+        
+        if readline is None:
+            return None
         
         try:
             if state == 0:
