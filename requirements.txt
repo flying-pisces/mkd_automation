@@ -45,6 +45,10 @@ pycairo>=1.20.0; sys_platform == "linux"           # Cairo graphics library
 pygobject>=3.40.0; sys_platform == "linux"         # GObject introspection
 evdev>=1.6.0; sys_platform == "linux"              # Input device interface
 
+# Browser Automation
+selenium>=4.15.0               # Web browser automation framework
+webdriver-manager>=4.0.0       # Automatic webdriver management
+
 # Optional but recommended
 requests>=2.28.0               # HTTP requests for updates/telemetry (optional)
 appdirs>=1.4.4                 # Cross-platform app directories

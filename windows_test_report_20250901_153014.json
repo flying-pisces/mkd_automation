@@ -1,0 +1,242 @@
+{
+  "overall_success": true,
+  "summary": {
+    "total_duration_seconds": 18.761371850967407,
+    "total_tests": 27,
+    "passed_tests": 26,
+    "failed_tests": 1,
+    "success_rate": 96.29629629629629
+  },
+  "category_summaries": [
+    {
+      "category": "Python Import Tests",
+      "success": true,
+      "summary": "10/10 imports successful",
+      "details_count": 10
+    },
+    {
+      "category": "GUI Component Tests",
+      "success": true,
+      "summary": "2/2 GUI tests passed",
+      "details_count": 2
+    },
+    {
+      "category": "Console Application Tests",
+      "success": true,
+      "summary": "3/3 console tests passed",
+      "details_count": 3
+    },
+    {
+      "category": "Chrome Extension Tests",
+      "success": true,
+      "summary": "3/4 extension tests passed",
+      "details_count": 4
+    },
+    {
+      "category": "Native Host Tests",
+      "success": true,
+      "summary": "5/5 native host tests passed",
+      "details_count": 5
+    },
+    {
+      "category": "Windows Integration Tests",
+      "success": true,
+      "summary": "3/3 integration tests passed",
+      "details_count": 3
+    }
+  ],
+  "detailed_results": {
+    "Python Import Tests": {
+      "success": true,
+      "summary": "10/10 imports successful",
+      "details": [
+        {
+          "import": "import sys",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "from mkd_v2.cli.gui_launcher import launch_gui",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "from mkd_v2.integration.system_controller import SystemController",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "from mkd_v2.core.message_broker import MessageBroker",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "from mkd_v2.native_host.host import NativeHost",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "import tkinter as tk",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "import pynput",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "import psutil",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "import win32api",
+          "success": true,
+          "error": null
+        },
+        {
+          "import": "import win32gui",
+          "success": true,
+          "error": null
+        }
+      ]
+    },
+    "GUI Component Tests": {
+      "success": true,
+      "summary": "2/2 GUI tests passed",
+      "details": [
+        {
+          "test": "GUI Test 1",
+          "success": true,
+          "output": "Tkinter window created successfully\nSystemController created successfully\nGUI component test completed\n",
+          "error": null
+        },
+        {
+          "test": "GUI Test 2",
+          "success": true,
+          "output": "Screen dimensions: 1536x960\nFound 35 visible windows\nWindows GUI integration test completed\n",
+          "error": null
+        }
+      ]
+    },
+    "Console Application Tests": {
+      "success": true,
+      "summary": "3/3 console tests passed",
+      "details": [
+        {
+          "test": "CLI Import Test",
+          "success": true,
+          "output": "CLI imported successfully\n",
+          "error": null
+        },
+        {
+          "test": "Message Broker Test",
+          "success": true,
+          "output": "Message broker created: <mkd_v2.core.message_broker.MessageBroker object at 0x000002CAB7E47E00>\n",
+          "error": null
+        },
+        {
+          "test": "System Utils Test",
+          "success": true,
+          "output": "CPU count: 16\nMemory: 63 GB\nPlatform: Windows-11-10.0.26100-SP0\n",
+          "error": null
+        }
+      ]
+    },
+    "Chrome Extension Tests": {
+      "success": true,
+      "summary": "3/4 extension tests passed",
+      "details": [
+        {
+          "test": "File exists: src/content.js",
+          "success": true,
+          "path": "chrome-extension\\src\\content.js"
+        },
+        {
+          "test": "File exists: dist/manifest.json",
+          "success": false,
+          "path": "chrome-extension\\dist\\manifest.json"
+        },
+        {
+          "test": "File exists: README.md",
+          "success": true,
+          "path": "chrome-extension\\README.md"
+        },
+        {
+          "test": "content.js syntax check",
+          "success": true,
+          "details": {
+            "has_chrome_runtime": true,
+            "has_console": true,
+            "has_content": true,
+            "size_bytes": 15974
+          }
+        }
+      ]
+    },
+    "Native Host Tests": {
+      "success": true,
+      "summary": "5/5 native host tests passed",
+      "details": [
+        {
+          "test": "Native host file: mkd_native_host",
+          "success": true,
+          "path": "bin\\mkd_native_host",
+          "executable": true
+        },
+        {
+          "test": "Native host file: mkd_native_host.bat",
+          "success": true,
+          "path": "bin\\mkd_native_host.bat",
+          "executable": true
+        },
+        {
+          "test": "Native host file: mkd_native_host.ps1",
+          "success": true,
+          "path": "bin\\mkd_native_host.ps1",
+          "executable": true
+        },
+        {
+          "test": "Native host file: mkd_native_host_debug",
+          "success": true,
+          "path": "bin\\mkd_native_host_debug",
+          "executable": true
+        },
+        {
+          "test": "Native host instantiation",
+          "success": true,
+          "output": "Native host created successfully\n",
+          "error": null
+        }
+      ]
+    },
+    "Windows Integration Tests": {
+      "success": true,
+      "summary": "3/3 integration tests passed",
+      "details": [
+        {
+          "test": "Windows Input Libraries",
+          "success": true,
+          "output": "pynput imported successfully\nwin32 APIs imported successfully\nInput libraries available\n",
+          "error": null
+        },
+        {
+          "test": "Registry Access",
+          "success": true,
+          "output": "Windows version: Windows 10 Pro\n",
+          "error": null
+        },
+        {
+          "test": "File System Access",
+          "success": true,
+          "output": "Temp directory: C:\\Users\\chuck\\AppData\\Local\\Temp\nTemp dir writable: True\nHome directory: C:\\Users\\chuck\nHome dir writable: True\nCurrent dir writable: True\n",
+          "error": null
+        }
+      ]
+    }
+  },
+  "recommendations": [
+    "All major components appear functional - ready for integration testing"
+  ]
+}

@@ -1,0 +1,345 @@
+/* MKD Automation Chrome Extension Popup Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: 14px;
+    color: #333;
+    background: #f8f9fa;
+    min-width: 320px;
+    min-height: 400px;
+}
+
+.popup-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 600px;
+}
+
+/* Header */
+.popup-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo-text {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ffd700;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.connected {
+    background: #28a745;
+    animation: none;
+}
+
+.status-dot.disconnected {
+    background: #dc3545;
+    animation: none;
+}
+
+.status-dot.error {
+    background: #fd7e14;
+    animation: blink 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.5; }
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    25%, 75% { opacity: 0.3; }
+}
+
+/* Main Content */
+.popup-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.section {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #495057;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.section-title.error {
+    color: #dc3545;
+}
+
+/* Connection Info */
+.connection-info {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.info-row:not(:last-child) {
+    border-bottom: 1px solid #f1f3f4;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+}
+
+.label {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.value {
+    color: #495057;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-primary {
+    background: #28a745;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #218838;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+.btn-accent {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-accent:hover:not(:disabled) {
+    background: #138496;
+}
+
+.btn-link {
+    background: transparent;
+    color: #667eea;
+    border: 1px solid #667eea;
+    width: 100%;
+}
+
+.btn-link:hover:not(:disabled) {
+    background: #667eea;
+    color: white;
+}
+
+.btn-icon {
+    font-size: 14px;
+}
+
+/* Settings */
+.settings {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px 0;
+    font-size: 13px;
+    color: #495057;
+    position: relative;
+}
+
+.checkbox-container:not(:last-child) {
+    border-bottom: 1px solid #f1f3f4;
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 3px;
+    margin-right: 12px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark {
+    background: #667eea;
+    border-color: #667eea;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Error Section */
+.error-section {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.error-message {
+    color: #721c24;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Footer */
+.popup-footer {
+    padding: 16px;
+    border-top: 1px solid #e9ecef;
+    background: white;
+}
+
+/* Recording State Styles */
+.recording .status-dot {
+    background: #dc3545 !important;
+    animation: blink 0.8s infinite;
+}
+
+.recording .btn-primary {
+    background: #dc3545;
+}
+
+.recording .btn-primary:hover:not(:disabled) {
+    background: #c82333;
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+    .popup-container {
+        min-width: 300px;
+    }
+    
+    .controls {
+        flex-direction: column;
+    }
+    
+    .btn {
+        min-width: auto;
+    }
+}
+
+/* Animation for smooth transitions */
+.section, .btn, .connection-info, .settings {
+    transition: all 0.3s ease;
+}
+
+/* Focus styles for accessibility */
+.btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.checkbox-container:focus-within .checkmark {
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}

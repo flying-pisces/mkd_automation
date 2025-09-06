@@ -1,0 +1,11 @@
+# Web UI Dependencies
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+python-socketio==5.8.0
+python-engineio==4.7.1
+
+# Desktop Automation Dependencies (already installed)
+pynput>=1.8.1
+pillow>=10.0.0
+pywin32>=306
+psutil>=5.9.0

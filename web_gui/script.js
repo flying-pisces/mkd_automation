@@ -13,12 +13,20 @@ class MKDRecorder {
         this.eventBuffer = [];
         this.maxEvents = 20;
         
+        // Screen capture state
+        this.mediaRecorder = null;
+        this.recordedChunks = [];
+        this.screenStream = null;
+        this.captureInterval = null;
+        this.screenshots = [];
+        
         // Replay state
         this.replayFrames = [];
         this.currentFrame = 0;
         this.isPlaying = false;
         this.playbackSpeed = 1.0;
         this.playbackInterval = null;
+        this.replayVideo = null;
         
         this.initializeUI();
         this.detectBrowser();
@@ -190,13 +198,13 @@ class MKDRecorder {
         // Capture keyboard events
         document.addEventListener('keydown', (e) => {
             if (this.isRecording && !this.isPaused && this.elements.captureKeyboard.checked) {
-                this.recordKeyPress(e.key, true);
+                this.recordKeyPress(e.key, true, e);
             }
         });
         
         document.addEventListener('keyup', (e) => {
             if (this.isRecording && !this.isPaused && this.elements.captureKeyboard.checked) {
-                this.recordKeyPress(e.key, false);
+                this.recordKeyPress(e.key, false, e);
             }
         });
     }
@@ -206,10 +214,18 @@ class MKDRecorder {
         if (this.actionsRecorded % 10 === 0) {
             const action = {
                 type: 'mouse_move',
-                data: { x, y },
+                data: { 
+                    x, 
+                    y,
+                    screenX: x,
+                    screenY: y,
+                    clientX: x,
+                    clientY: y
+                },
                 timestamp: this.getTimestamp()
             };
             this.sendAction(action);
+            this.storeActionLocally(action);  // Also store locally
             this.addEvent(`Mouse Move: (${x}, ${y})`, true);
         }
         this.actionsRecorded++;
@@ -219,23 +235,40 @@ class MKDRecorder {
         const buttonNames = ['left', 'middle', 'right'];
         const action = {
             type: pressed ? 'mouse_down' : 'mouse_up',
-            data: { x, y, button: buttonNames[button] || 'unknown' },
+            data: { 
+                x, 
+                y, 
+                button: buttonNames[button] || 'unknown',
+                screenX: x,
+                screenY: y,
+                clientX: x,
+                clientY: y
+            },
             timestamp: this.getTimestamp()
         };
         this.sendAction(action);
+        this.storeActionLocally(action);  // Also store locally
         this.actionsRecorded++;
         
         const status = pressed ? 'Press' : 'Release';
         this.addEvent(`Mouse ${status}: ${buttonNames[button]} at (${x}, ${y})`);
     }
     
-    recordKeyPress(key, pressed) {
+    recordKeyPress(key, pressed, event) {
         const action = {
             type: pressed ? 'key_down' : 'key_up',
-            data: { key: key.toUpperCase() },
+            data: { 
+                key: key.toUpperCase(),
+                code: key,
+                shiftKey: event ? event.shiftKey : false,
+                ctrlKey: event ? event.ctrlKey : false,
+                altKey: event ? event.altKey : false,
+                metaKey: event ? event.metaKey : false
+            },
             timestamp: this.getTimestamp()
         };
         this.sendAction(action);
+        this.storeActionLocally(action);  // Also store locally
         this.actionsRecorded++;
         
         if (pressed) {
@@ -267,7 +300,7 @@ class MKDRecorder {
         return (Date.now() - this.startTime) / 1000;
     }
     
-    startRecording() {
+    async startRecording() {
         if (this.isRecording) return;
         
         this.isRecording = true;
@@ -275,9 +308,12 @@ class MKDRecorder {
         this.startTime = Date.now();
         this.actionsRecorded = 0;
         this.screenshotCount = 0;
+        this.recordedChunks = [];
+        this.screenshots = [];
         
         // Clear local storage
         localStorage.removeItem('mkd_actions');
+        localStorage.removeItem('mkd_screenshots');
         
         // Update UI
         this.elements.statusDot.className = 'status-dot recording';
@@ -288,6 +324,11 @@ class MKDRecorder {
         // Show recording boundary if enabled
         if (this.elements.showBoundary.checked) {
             this.elements.recordingBoundary.classList.remove('hidden');
+        }
+        
+        // Start screen capture if enabled
+        if (this.elements.captureScreenshots.checked) {
+            await this.startScreenCapture();
         }
         
         // Send start command to backend
@@ -308,11 +349,14 @@ class MKDRecorder {
         this.addEvent('Recording started');
     }
     
-    stopRecording() {
+    async stopRecording() {
         if (!this.isRecording) return;
         
         this.isRecording = false;
         this.isPaused = false;
+        
+        // Stop screen capture
+        await this.stopScreenCapture();
         
         // Update UI
         this.elements.statusDot.className = 'status-dot stopped';
@@ -348,26 +392,55 @@ class MKDRecorder {
         this.updateStats();
     }
     
-    saveRecording(actions) {
+    async saveRecording(actions) {
         // Save to localStorage with timestamp
         const timestamp = new Date().toISOString();
+        
+        // Process video if available
+        let videoData = null;
+        if (this.recordedChunks.length > 0) {
+            const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+            videoData = await this.blobToBase64(blob);
+        }
+        
+        // Combine all recorded data
         const recording = {
             timestamp,
             duration: this.startTime ? (Date.now() - this.startTime) / 1000 : 0,
-            actions: actions,
-            screenshots: this.screenshotCount
+            actions: actions,  // Mouse and keyboard actions with timestamps
+            screenshots: this.screenshots,
+            screenshotCount: this.screenshotCount,
+            video: videoData,
+            hasVideo: !!videoData,
+            hasActions: actions && actions.length > 0,
+            captureSettings: {
+                mouse: this.elements.captureMouse.checked,
+                keyboard: this.elements.captureKeyboard.checked,
+                screen: this.elements.captureScreenshots.checked
+            }
         };
         
         const recordings = JSON.parse(localStorage.getItem('mkd_recordings') || '[]');
         recordings.push(recording);
         
-        // Keep only last 10 recordings
-        if (recordings.length > 10) {
+        // Keep only last 5 recordings due to storage limitations
+        if (recordings.length > 5) {
             recordings.shift();
         }
         
         localStorage.setItem('mkd_recordings', JSON.stringify(recordings));
         localStorage.setItem('mkd_last_recording', JSON.stringify(recording));
+        
+        this.addEvent(`Recording saved: ${actions.length} actions, ${videoData ? 'with video' : this.screenshots.length + ' screenshots'}`);
+    }
+    
+    blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
     }
     
     updateStats() {
@@ -408,6 +481,149 @@ class MKDRecorder {
         this.elements.eventsLog.scrollTop = this.elements.eventsLog.scrollHeight;
     }
     
+    // Screen capture methods
+    async startScreenCapture() {
+        try {
+            // Request screen capture permission
+            this.screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    mediaSource: 'screen',
+                    width: { max: 1920 },
+                    height: { max: 1080 },
+                    frameRate: { max: 30 }
+                },
+                audio: false
+            });
+            
+            // Check if browser supports MediaRecorder
+            if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm')) {
+                // Setup video recording
+                const options = {
+                    mimeType: 'video/webm;codecs=vp8,opus',
+                    videoBitsPerSecond: 2500000
+                };
+                
+                this.mediaRecorder = new MediaRecorder(this.screenStream, options);
+                
+                this.mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        this.recordedChunks.push(event.data);
+                    }
+                };
+                
+                this.mediaRecorder.onstop = () => {
+                    this.addEvent('Screen recording stopped');
+                };
+                
+                this.mediaRecorder.onerror = (error) => {
+                    console.error('MediaRecorder error:', error);
+                    this.addEvent('Screen recording error');
+                };
+                
+                // Start recording
+                this.mediaRecorder.start(1000); // Capture in 1-second chunks
+                this.addEvent('Screen recording started (video)');
+            } else {
+                // Fallback to screenshot capture
+                await this.startScreenshotCapture();
+            }
+            
+            // Handle stream end
+            this.screenStream.getVideoTracks()[0].onended = () => {
+                this.addEvent('Screen share ended by user');
+                if (this.isRecording) {
+                    this.stopRecording();
+                }
+            };
+            
+        } catch (error) {
+            if (error.name === 'NotAllowedError') {
+                this.addEvent('Screen capture permission denied');
+            } else {
+                console.error('Error starting screen capture:', error);
+                this.addEvent('Failed to start screen capture');
+            }
+        }
+    }
+    
+    async startScreenshotCapture() {
+        // Capture screenshots at intervals
+        const video = document.createElement('video');
+        video.srcObject = this.screenStream;
+        video.autoplay = true;
+        video.style.display = 'none';
+        document.body.appendChild(video);
+        
+        // Wait for video to be ready
+        await new Promise(resolve => {
+            video.onloadedmetadata = resolve;
+        });
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Capture screenshots every 500ms (2 FPS)
+        this.captureInterval = setInterval(() => {
+            if (!this.isRecording) {
+                clearInterval(this.captureInterval);
+                document.body.removeChild(video);
+                return;
+            }
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            
+            // Convert to base64 and store
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const screenshot = {
+                            timestamp: this.getTimestamp(),
+                            data: reader.result
+                        };
+                        this.screenshots.push(screenshot);
+                        this.screenshotCount++;
+                        
+                        // Limit stored screenshots to prevent memory issues
+                        if (this.screenshots.length > 120) { // Max 60 seconds at 2 FPS
+                            this.screenshots.shift();
+                        }
+                        
+                        this.updateStats();
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            }, 'image/jpeg', 0.7);
+        }, 500);
+        
+        this.addEvent('Screenshot capture started (2 FPS)');
+    }
+    
+    async stopScreenCapture() {
+        // Stop video recording
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+        }
+        
+        // Stop screenshot capture
+        if (this.captureInterval) {
+            clearInterval(this.captureInterval);
+            this.captureInterval = null;
+        }
+        
+        // Stop screen stream
+        if (this.screenStream) {
+            this.screenStream.getTracks().forEach(track => track.stop());
+            this.screenStream = null;
+        }
+        
+        // Clean up any video elements
+        const videos = document.querySelectorAll('video[style*="display: none"]');
+        videos.forEach(video => video.remove());
+    }
+    
     // Replay functionality
     replayLastRecording() {
         const lastRecording = localStorage.getItem('mkd_last_recording');
@@ -437,39 +653,74 @@ class MKDRecorder {
     }
     
     loadReplayData(recording) {
-        // Simulate frames from actions (in real app, would load actual screenshots)
+        // Load actual video or screenshots
         this.replayFrames = [];
+        this.replayVideo = null;
+        this.replayActions = recording.actions || [];
+        this.replayDuration = recording.duration || 0;
         
-        // Create synthetic frames from actions for demonstration
-        const frameCount = Math.min(recording.screenshots || 30, 100);
-        for (let i = 0; i < frameCount; i++) {
-            this.replayFrames.push({
-                index: i,
-                timestamp: (i * 0.5) // 2 FPS
-            });
+        // Store the full recording for combined replay
+        this.currentRecording = recording;
+        
+        if (recording.video) {
+            // Load video data
+            this.replayVideo = recording.video;
+            this.setupVideoReplay();
+        } else if (recording.screenshots && recording.screenshots.length > 0) {
+            // Load screenshot frames
+            this.replayFrames = recording.screenshots;
+            this.currentFrame = 0;
+            this.elements.totalFrames.textContent = this.replayFrames.length;
+            this.elements.currentFrame.textContent = '1';
+        } else {
+            // No visual data available
+            this.replayFrames = [];
+            this.elements.totalFrames.textContent = '0';
+            this.elements.currentFrame.textContent = '0';
         }
         
-        this.currentFrame = 0;
-        this.elements.totalFrames.textContent = this.replayFrames.length;
-        this.elements.currentFrame.textContent = '0';
+        // Display recording info
+        const info = [];
+        if (recording.hasVideo) info.push('Video');
+        if (recording.screenshots?.length > 0) info.push(`${recording.screenshots.length} Screenshots`);
+        if (recording.hasActions) info.push(`${recording.actions.length} Actions`);
+        
+        if (info.length > 0) {
+            this.addEvent(`Loaded recording: ${info.join(', ')}`);
+        }
     }
     
     openReplayModal() {
         this.elements.replayModal.classList.remove('hidden');
         
-        if (this.replayFrames.length === 0) {
-            this.elements.noFramesMessage.classList.remove('hidden');
-            this.elements.replayCanvas.style.display = 'none';
-        } else {
+        if (this.replayVideo) {
+            // Show video player
+            this.elements.noFramesMessage.classList.add('hidden');
+            this.elements.replayCanvas.style.display = 'block';
+            this.showVideo();
+        } else if (this.replayFrames.length > 0) {
+            // Show screenshots
             this.elements.noFramesMessage.classList.add('hidden');
             this.elements.replayCanvas.style.display = 'block';
             this.showFrame(0);
+        } else {
+            // No visual data
+            this.elements.noFramesMessage.classList.remove('hidden');
+            this.elements.replayCanvas.style.display = 'none';
         }
     }
     
     closeReplayModal() {
         this.stopPlayback();
         this.elements.replayModal.classList.add('hidden');
+        
+        // Restore canvas if video was playing
+        const container = this.elements.replayCanvas.parentElement;
+        const videoElement = container.querySelector('video');
+        if (videoElement) {
+            container.innerHTML = '<canvas id="replayCanvas"></canvas>';
+            this.elements.replayCanvas = document.getElementById('replayCanvas');
+        }
     }
     
     showFrame(index) {
@@ -479,28 +730,106 @@ class MKDRecorder {
         this.elements.currentFrame.textContent = index + 1;
         
         // Update progress bar
-        const progress = (index / (this.replayFrames.length - 1)) * 100;
+        const progress = this.replayFrames.length > 1 ? 
+            (index / (this.replayFrames.length - 1)) * 100 : 0;
         this.elements.progressFill.style.width = `${progress}%`;
         
-        // Draw frame on canvas (placeholder visualization)
-        const ctx = this.elements.replayCanvas.getContext('2d');
-        const width = this.elements.replayCanvas.width = 800;
-        const height = this.elements.replayCanvas.height = 400;
+        // Get the screenshot data
+        const frame = this.replayFrames[index];
         
-        // Clear canvas
-        ctx.fillStyle = '#222';
-        ctx.fillRect(0, 0, width, height);
+        if (frame.data) {
+            // Load and display the actual screenshot
+            const img = new Image();
+            img.onload = () => {
+                const canvas = this.elements.replayCanvas;
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size to maintain aspect ratio
+                const maxWidth = 1024;
+                const maxHeight = 576;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth || height > maxHeight) {
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw the screenshot
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Draw timestamp overlay
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, height - 30, width, 30);
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Time: ${frame.timestamp.toFixed(1)}s`, 10, height - 10);
+            };
+            img.src = frame.data;
+        }
+    }
+    
+    setupVideoReplay() {
+        // Create container for video and overlay
+        const container = this.elements.replayCanvas.parentElement;
+        container.innerHTML = '';
         
-        // Draw frame number
-        ctx.fillStyle = '#fff';
-        ctx.font = '48px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`Frame ${index + 1}`, width / 2, height / 2);
+        // Create video element
+        const videoElement = document.createElement('video');
+        videoElement.src = this.replayVideo;
+        videoElement.controls = false; // We'll use custom controls
+        videoElement.style.width = '100%';
+        videoElement.style.maxHeight = '576px';
+        videoElement.style.display = 'block';
         
-        // Draw timestamp
-        ctx.font = '24px Arial';
-        ctx.fillText(`Time: ${this.replayFrames[index].timestamp.toFixed(1)}s`, width / 2, height / 2 + 60);
+        // Create overlay canvas for action indicators
+        const overlayCanvas = document.createElement('canvas');
+        overlayCanvas.style.position = 'absolute';
+        overlayCanvas.style.top = '0';
+        overlayCanvas.style.left = '0';
+        overlayCanvas.style.pointerEvents = 'none';
+        overlayCanvas.style.zIndex = '10';
+        
+        // Create wrapper for positioning
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
+        
+        wrapper.appendChild(videoElement);
+        wrapper.appendChild(overlayCanvas);
+        container.appendChild(wrapper);
+        
+        // Store references
+        this.replayVideoElement = videoElement;
+        this.overlayCanvas = overlayCanvas;
+        this.overlayCtx = overlayCanvas.getContext('2d');
+        
+        // Update overlay canvas size when video loads
+        videoElement.addEventListener('loadedmetadata', () => {
+            overlayCanvas.width = videoElement.videoWidth || videoElement.offsetWidth;
+            overlayCanvas.height = videoElement.videoHeight || videoElement.offsetHeight;
+        });
+        
+        // Update progress and action overlays based on video playback
+        videoElement.addEventListener('timeupdate', () => {
+            const currentTime = videoElement.currentTime;
+            const progress = (currentTime / videoElement.duration) * 100;
+            this.elements.progressFill.style.width = `${progress}%`;
+            this.elements.currentFrame.textContent = Math.floor(currentTime);
+            this.elements.totalFrames.textContent = Math.floor(videoElement.duration);
+            
+            // Update action overlays
+            this.updateActionOverlays(currentTime);
+        });\n        \n        // Handle playback controls\n        this.elements.playBtn.onclick = () => {\n            if (videoElement.paused) {\n                videoElement.play();\n                this.elements.playBtn.textContent = '⏸ Pause';\n            } else {\n                videoElement.pause();\n                this.elements.playBtn.textContent = '▶ Play';\n            }\n        };\n        \n        this.elements.pauseBtn.onclick = () => {\n            videoElement.pause();\n            this.elements.playBtn.textContent = '▶ Play';\n        };\n        \n        this.elements.stopPlaybackBtn.onclick = () => {\n            videoElement.pause();\n            videoElement.currentTime = 0;\n            this.elements.playBtn.textContent = '▶ Play';\n            this.clearActionOverlays();\n        };\n        \n        // Handle speed control\n        this.elements.speedSlider.addEventListener('input', (e) => {\n            videoElement.playbackRate = parseFloat(e.target.value);\n        });\n    }"}
+    
+    showVideo() {
+        if (!this.replayVideo) return;
+        this.setupVideoReplay();
     }
     
     playPause() {
@@ -512,12 +841,19 @@ class MKDRecorder {
     }
     
     startPlayback() {
+        if (this.replayVideo) {
+            // Video playback is handled by video element
+            const videoElement = this.elements.replayCanvas.parentElement.querySelector('video');
+            if (videoElement) videoElement.play();
+            return;
+        }
+        
         if (this.replayFrames.length === 0) return;
         
         this.isPlaying = true;
         this.elements.playBtn.textContent = '⏸ Pause';
         
-        const frameDelay = 500 / this.playbackSpeed; // Base 500ms between frames
+        const frameDelay = 500 / this.playbackSpeed; // Base 500ms between frames (2 FPS)
         
         this.playbackInterval = setInterval(() => {
             if (this.currentFrame >= this.replayFrames.length - 1) {
@@ -545,6 +881,116 @@ class MKDRecorder {
         if (this.replayFrames.length > 0) {
             this.showFrame(0);
         }
+    }
+    
+    // Action overlay methods for combined video + action replay
+    updateActionOverlays(currentTime) {
+        if (!this.overlayCanvas || !this.replayActions) return;
+        
+        // Clear previous overlays
+        this.clearActionOverlays();
+        
+        // Find actions that should be visible at current time
+        const timeWindow = 0.5; // Show actions for 500ms
+        const visibleActions = this.replayActions.filter(action => {
+            return Math.abs(action.timestamp - currentTime) <= timeWindow;
+        });
+        
+        // Draw action indicators
+        visibleActions.forEach(action => this.drawActionIndicator(action, currentTime));
+    }
+    
+    clearActionOverlays() {
+        if (!this.overlayCanvas) return;
+        this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+    }
+    
+    drawActionIndicator(action, currentTime) {
+        if (!this.overlayCtx) return;
+        
+        const ctx = this.overlayCtx;
+        const age = currentTime - action.timestamp;
+        const opacity = Math.max(0, 1 - (Math.abs(age) / 0.5)); // Fade over 500ms
+        
+        // Scale coordinates if needed (assuming screen coordinates map to canvas)
+        const x = action.data.x || action.data.clientX || 0;
+        const y = action.data.y || action.data.clientY || 0;
+        
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        
+        if (action.type.startsWith('mouse')) {
+            this.drawMouseIndicator(ctx, x, y, action);
+        } else if (action.type.startsWith('key')) {
+            this.drawKeyboardIndicator(ctx, action);
+        }
+        
+        ctx.restore();
+    }
+    
+    drawMouseIndicator(ctx, x, y, action) {
+        const radius = 15;
+        
+        // Draw circle
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        
+        if (action.type === 'mouse_down') {
+            // Click indicator - filled circle
+            ctx.fillStyle = action.data.button === 'left' ? '#ff4444' : 
+                           action.data.button === 'right' ? '#4444ff' : '#44ff44';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        } else if (action.type === 'mouse_move') {
+            // Move indicator - hollow circle
+            ctx.strokeStyle = '#ffff44';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Add ripple effect for clicks
+        if (action.type === 'mouse_down') {
+            ctx.beginPath();
+            ctx.arc(x, y, radius + 10, 0, 2 * Math.PI);
+            ctx.strokeStyle = ctx.fillStyle;
+            ctx.globalAlpha *= 0.5;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
+    
+    drawKeyboardIndicator(ctx, action) {
+        if (action.type !== 'key_down') return;
+        
+        const key = action.data.key;
+        const x = 50; // Fixed position for keyboard indicators
+        let y = 50;
+        
+        // Stack multiple key presses
+        const recentKeys = this.replayActions.filter(a => 
+            a.type === 'key_down' && 
+            Math.abs(a.timestamp - action.timestamp) <= 0.1
+        );
+        const keyIndex = recentKeys.indexOf(action);
+        y += keyIndex * 30;
+        
+        // Draw key background
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(x, y, 80, 25);
+        
+        // Draw key border
+        ctx.strokeStyle = '#666666';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, 80, 25);
+        
+        // Draw key text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '14px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(key, x + 40, y + 12.5);
     }
 }
 

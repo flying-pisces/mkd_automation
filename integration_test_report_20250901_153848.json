@@ -1,0 +1,239 @@
+{
+  "overall_success": true,
+  "summary": {
+    "total_duration_seconds": 10.300612926483154,
+    "total_tests": 23,
+    "passed_tests": 23,
+    "failed_tests": 0,
+    "success_rate": 100.0
+  },
+  "category_summaries": [
+    {
+      "category": "System Requirements Check",
+      "success": true,
+      "summary": "7/7 requirements met",
+      "details_count": 7
+    },
+    {
+      "category": "Application Startup Tests",
+      "success": true,
+      "summary": "2/2 startup tests passed",
+      "details_count": 2
+    },
+    {
+      "category": "Native Host Communication",
+      "success": true,
+      "summary": "4/4 native host tests passed",
+      "details_count": 4
+    },
+    {
+      "category": "Chrome Extension Integration",
+      "success": true,
+      "summary": "7/7 extension tests passed",
+      "details_count": 7
+    },
+    {
+      "category": "End-to-End Workflow",
+      "success": true,
+      "summary": "1/1 workflow tests passed",
+      "details_count": 1
+    },
+    {
+      "category": "Error Recovery Tests",
+      "success": true,
+      "summary": "1/1 error recovery tests passed",
+      "details_count": 1
+    },
+    {
+      "category": "Performance Tests",
+      "success": true,
+      "summary": "1/1 performance tests passed",
+      "details_count": 1
+    }
+  ],
+  "detailed_results": {
+    "System Requirements Check": {
+      "success": true,
+      "summary": "7/7 requirements met",
+      "details": [
+        {
+          "test": "Python Version Check",
+          "success": true,
+          "details": "Python 3.13.5",
+          "expected": "Python >= 3.8"
+        },
+        {
+          "test": "Virtual Environment",
+          "success": true,
+          "details": "Virtual env at: C:\\project\\mkd_automation\\venv\\Scripts\\python.exe"
+        },
+        {
+          "test": "Directory: src",
+          "success": true,
+          "details": "Path: C:\\project\\mkd_automation\\src"
+        },
+        {
+          "test": "Directory: chrome-extension",
+          "success": true,
+          "details": "Path: C:\\project\\mkd_automation\\chrome-extension"
+        },
+        {
+          "test": "Directory: bin",
+          "success": true,
+          "details": "Path: C:\\project\\mkd_automation\\bin"
+        },
+        {
+          "test": "Directory: tests",
+          "success": true,
+          "details": "Path: C:\\project\\mkd_automation\\tests"
+        },
+        {
+          "test": "Windows API Access",
+          "success": true,
+          "details": "win32api available"
+        }
+      ]
+    },
+    "Application Startup Tests": {
+      "success": true,
+      "summary": "2/2 startup tests passed",
+      "details": [
+        {
+          "test": "Critical Module Imports",
+          "success": true,
+          "output": "All critical imports successful\n",
+          "error": null
+        },
+        {
+          "test": "System Controller Creation",
+          "success": true,
+          "output": "System controller created: SystemController\nSystem controller test completed\n",
+          "error": null
+        }
+      ]
+    },
+    "Native Host Communication": {
+      "success": true,
+      "summary": "4/4 native host tests passed",
+      "details": [
+        {
+          "test": "Native Host Module",
+          "success": true,
+          "output": "Native host created: NativeHost\nMessage serialization/deserialization works\nNative host communication test completed\n",
+          "error": null
+        },
+        {
+          "test": "Native Host Executable: mkd_native_host",
+          "success": true,
+          "details": "Path: bin\\mkd_native_host",
+          "executable": true
+        },
+        {
+          "test": "Native Host Executable: mkd_native_host.bat",
+          "success": true,
+          "details": "Path: bin\\mkd_native_host.bat",
+          "executable": true
+        },
+        {
+          "test": "Native Host Executable: mkd_native_host.ps1",
+          "success": true,
+          "details": "Path: bin\\mkd_native_host.ps1",
+          "executable": true
+        }
+      ]
+    },
+    "Chrome Extension Integration": {
+      "success": true,
+      "summary": "7/7 extension tests passed",
+      "details": [
+        {
+          "test": "Manifest JSON Valid",
+          "success": true,
+          "details": {
+            "name": "MKD Automation Chrome Extension",
+            "version": "2.0.0",
+            "manifest_version": 3
+          }
+        },
+        {
+          "test": "Manifest Required Fields",
+          "success": true,
+          "details": "All required fields present"
+        },
+        {
+          "test": "Extension File: src/background.js",
+          "success": true,
+          "path": "chrome-extension\\src\\background.js",
+          "details": "Size: 9209 bytes",
+          "has_content": true
+        },
+        {
+          "test": "Extension File: src/content.js",
+          "success": true,
+          "path": "chrome-extension\\src\\content.js",
+          "details": "Size: 16457 bytes",
+          "has_content": true
+        },
+        {
+          "test": "Extension File: src/popup/popup.html",
+          "success": true,
+          "path": "chrome-extension\\src\\popup\\popup.html",
+          "details": "Size: 3958 bytes"
+        },
+        {
+          "test": "Extension File: src/popup/popup.js",
+          "success": true,
+          "path": "chrome-extension\\src\\popup\\popup.js",
+          "details": "Size: 12180 bytes",
+          "has_content": true
+        },
+        {
+          "test": "Extension File: src/popup/popup.css",
+          "success": true,
+          "path": "chrome-extension\\src\\popup\\popup.css",
+          "details": "Size: 6183 bytes"
+        }
+      ]
+    },
+    "End-to-End Workflow": {
+      "success": true,
+      "summary": "1/1 workflow tests passed",
+      "details": [
+        {
+          "test": "End-to-End Workflow Simulation",
+          "success": true,
+          "output": "Starting end-to-end workflow simulation...\nSystem controller created\nMessage broker not available\n",
+          "error": null
+        }
+      ]
+    },
+    "Error Recovery Tests": {
+      "success": true,
+      "summary": "1/1 error recovery tests passed",
+      "details": [
+        {
+          "test": "Error Recovery Mechanisms",
+          "success": true,
+          "output": "Error handling test 1: Invalid message structure\nError handling test 2: Missing component graceful handling\nError recovery tests: 2/2 handled gracefully\n",
+          "error": null
+        }
+      ]
+    },
+    "Performance Tests": {
+      "success": true,
+      "summary": "1/1 performance tests passed",
+      "details": [
+        {
+          "test": "Component Startup Performance",
+          "success": true,
+          "output": "Component startup time: 1.212 seconds\nPerformance: GOOD (< 2s)\n",
+          "error": null
+        }
+      ]
+    }
+  },
+  "recommendations": [
+    "All integration tests passed - system is ready for production use",
+    "Consider running load testing and user acceptance testing"
+  ]
+}

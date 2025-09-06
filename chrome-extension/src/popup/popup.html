@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MKD Automation</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <header class="popup-header">
+            <div class="logo">
+                <span class="logo-text">MKD</span>
+            </div>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="statusText">Connecting...</span>
+            </div>
+        </header>
+
+        <main class="popup-content">
+            <!-- Connection Status -->
+            <div class="section">
+                <div class="section-title">Connection Status</div>
+                <div class="connection-info">
+                    <div class="info-row">
+                        <span class="label">Native Host:</span>
+                        <span class="value" id="hostStatus">Checking...</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Version:</span>
+                        <span class="value" id="versionInfo">2.0.0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recording Controls -->
+            <div class="section">
+                <div class="section-title">Recording</div>
+                <div class="controls">
+                    <button class="btn btn-primary" id="recordBtn">
+                        <span class="btn-icon">●</span>
+                        <span class="btn-text">Start Recording</span>
+                    </button>
+                    <button class="btn btn-secondary" id="stopBtn" disabled>
+                        <span class="btn-icon">■</span>
+                        <span class="btn-text">Stop Recording</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="section">
+                <div class="section-title">Playback</div>
+                <div class="controls">
+                    <button class="btn btn-accent" id="playBtn" disabled>
+                        <span class="btn-icon">▶</span>
+                        <span class="btn-text">Play Recording</span>
+                    </button>
+                    <button class="btn btn-secondary" id="pauseBtn" disabled>
+                        <span class="btn-icon">⏸</span>
+                        <span class="btn-text">Pause</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="section">
+                <div class="section-title">Settings</div>
+                <div class="settings">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="debugMode" checked>
+                        <span class="checkmark"></span>
+                        Debug Mode
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="autoRecord">
+                        <span class="checkmark"></span>
+                        Auto Record
+                    </label>
+                </div>
+            </div>
+
+            <!-- Error Messages -->
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="section-title error">Error</div>
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+        </main>
+
+        <footer class="popup-footer">
+            <button class="btn btn-link" id="openDesktopApp">Open Desktop App</button>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

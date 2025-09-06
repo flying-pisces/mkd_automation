@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Intelligent System-Level Recording - MKD Automation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .panel h2 {
+            margin: 0 0 15px 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e53e3e;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.active {
+            background: #38a169;
+        }
+        
+        .status-indicator.recording {
+            background: #e53e3e;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #4299e1, #3182ce);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 8px 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn.danger {
+            background: linear-gradient(45deg, #e53e3e, #c53030);
+        }
+        
+        .btn.success {
+            background: linear-gradient(45deg, #38a169, #2f855a);
+        }
+        
+        .btn.warning {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+        }
+        
+        .system-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .events-log {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .event-line {
+            margin: 2px 0;
+            padding: 2px 0;
+            border-left: 3px solid transparent;
+        }
+        
+        .event-system {
+            border-left-color: #4299e1;
+            background: rgba(66, 153, 225, 0.1);
+        }
+        
+        .event-user {
+            border-left-color: #38a169;
+            background: rgba(56, 161, 105, 0.1);
+        }
+        
+        .event-correlation {
+            border-left-color: #ed8936;
+            background: rgba(237, 137, 54, 0.1);
+        }
+        
+        .process-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .process-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .process-name {
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .process-cpu {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            background: linear-gradient(135deg, #fed7e2, #fbb6ce);
+            border: 2px solid #f687b3;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .instructions h3 {
+            color: #97266d;
+            margin: 0 0 15px 0;
+        }
+        
+        .test-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .scenario {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .scenario h4 {
+            color: #2d3748;
+            margin: 0 0 10px 0;
+        }
+        
+        .scenario-steps {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+        
+        .correlation-display {
+            background: #fefefe;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .correlation-pair {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .user-action {
+            flex: 1;
+            padding: 8px;
+            background: #e6fffa;
+            border: 1px solid #38a169;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .system-result {
+            flex: 1;
+            padding: 8px;
+            background: #ebf8ff;
+            border: 1px solid #4299e1;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .arrow {
+            font-size: 20px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧠 Intelligent System-Level Recording</h1>
+    <div class="subtitle" style="text-align: center; color: rgba(255,255,255,0.8); margin-bottom: 30px;">
+        Advanced MKD Engine with Process Monitoring, Task Manager Integration & Semantic Analysis
+    </div>
+    
+    <div class="instructions">
+        <h3>🎯 How This Works</h3>
+        <p>This intelligent recording system monitors <strong>three layers simultaneously</strong>:</p>
+        <div class="test-scenarios">
+            <div class="scenario">
+                <h4>🖱️ Layer 1: User Input</h4>
+                <div class="scenario-steps">
+                    Mouse movements, clicks, and keyboard input with precise timing
+                </div>
+            </div>
+            <div class="scenario">
+                <h4>📹 Layer 2: Visual Capture</h4>
+                <div class="scenario-steps">
+                    Screen recording or screenshot capture of what the user sees
+                </div>
+            </div>
+            <div class="scenario">
+                <h4>🔧 Layer 3: System Events</h4>
+                <div class="scenario-steps">
+                    Process launches, window changes, Task Manager integration, semantic analysis
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="panel">
+            <h2>
+                <span class="status-indicator" id="recordingStatus"></span>
+                🎮 Recording Controls
+            </h2>
+            <button id="startBtn" class="btn success">🚀 Start Intelligent Recording</button>
+            <button id="stopBtn" class="btn danger" disabled>⏹️ Stop Recording</button>
+            <button id="replayBtn" class="btn" disabled>🎬 Intelligent Replay</button>
+            <div style="margin: 15px 0;">
+                <label style="display: flex; align-items: center; gap: 8px; margin: 5px 0;">
+                    <input type="checkbox" id="autoTaskManager" checked>
+                    <span>Auto-launch Task Manager</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; margin: 5px 0;">
+                    <input type="checkbox" id="systemMonitoring" checked>
+                    <span>System-level monitoring</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; margin: 5px 0;">
+                    <input type="checkbox" id="semanticAnalysis" checked>
+                    <span>Semantic action analysis</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>📊 System Status</h2>
+            <div class="system-stats">
+                <div class="stat-card">
+                    <span id="cpuUsage" class="stat-value">--</span>
+                    <span class="stat-label">CPU %</span>
+                </div>
+                <div class="stat-card">
+                    <span id="memoryUsage" class="stat-value">--</span>
+                    <span class="stat-label">Memory %</span>
+                </div>
+                <div class="stat-card">
+                    <span id="processCount" class="stat-value">--</span>
+                    <span class="stat-label">Processes</span>
+                </div>
+                <div class="stat-card">
+                    <span id="systemEvents" class="stat-value">0</span>
+                    <span class="stat-label">System Events</span>
+                </div>
+            </div>
+            <button id="refreshStatus" class="btn">🔄 Refresh Status</button>
+            <button id="launchTaskMgr" class="btn warning">🔧 Launch Task Manager</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="panel">
+            <h2>📋 Live Process Monitor</h2>
+            <div id="processList" class="process-list">
+                <div style="text-align: center; padding: 20px; color: #718096;">
+                    Click "Get Process List" to view running processes
+                </div>
+            </div>
+            <button id="getProcesses" class="btn">📋 Get Process List</button>
+        </div>
+        
+        <div class="panel">
+            <h2>🧠 Semantic Analysis</h2>
+            <div id="correlationDisplay" class="correlation-display">
+                <div style="text-align: center; padding: 20px; color: #718096;">
+                    User actions will be correlated with system events here
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel full-width">
+        <h2>📡 Live Event Stream</h2>
+        <div id="eventsLog" class="events-log">
+            <div class="event-line">System initialized. Waiting for connection...</div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h3>🧪 Test Scenarios</h3>
+        <div class="test-scenarios">
+            <div class="scenario">
+                <h4>🌐 Browser Launch Test</h4>
+                <div class="scenario-steps">
+                    1. Start recording<br>
+                    2. Press Win+R (Run dialog)<br>
+                    3. Type "chrome" and press Enter<br>
+                    4. Navigate to a website<br>
+                    5. Stop recording and see correlation!
+                </div>
+            </div>
+            <div class="scenario">
+                <h4>🔢 Calculator Test</h4>
+                <div class="scenario-steps">
+                    1. Start recording<br>
+                    2. Press Win+R, type "calc"<br>
+                    3. Perform calculations<br>
+                    4. System will understand you're calculating!
+                </div>
+            </div>
+            <div class="scenario">
+                <h4>⌨️ Hotkey Test</h4>
+                <div class="scenario-steps">
+                    1. Start recording<br>
+                    2. Try Ctrl+Shift+Esc (Task Manager)<br>
+                    3. Try Ctrl+Alt+D (Show Desktop)<br>
+                    4. System recognizes hotkey meanings!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class IntelligentRecorder {
+            constructor() {
+                this.ws = null;
+                this.isRecording = false;
+                this.isConnected = false;
+                this.systemEvents = 0;
+                this.userActions = [];
+                this.correlations = [];
+                
+                this.initUI();
+                this.connectWebSocket();
+            }
+            
+            initUI() {
+                // Get UI elements
+                this.startBtn = document.getElementById('startBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.replayBtn = document.getElementById('replayBtn');
+                this.refreshStatusBtn = document.getElementById('refreshStatus');
+                this.launchTaskMgrBtn = document.getElementById('launchTaskMgr');
+                this.getProcessesBtn = document.getElementById('getProcesses');
+                
+                this.recordingStatus = document.getElementById('recordingStatus');
+                this.eventsLog = document.getElementById('eventsLog');
+                this.processList = document.getElementById('processList');
+                this.correlationDisplay = document.getElementById('correlationDisplay');
+                
+                // Status elements
+                this.cpuUsage = document.getElementById('cpuUsage');
+                this.memoryUsage = document.getElementById('memoryUsage');
+                this.processCount = document.getElementById('processCount');
+                this.systemEventsCount = document.getElementById('systemEvents');
+                
+                // Settings
+                this.autoTaskManager = document.getElementById('autoTaskManager');
+                this.systemMonitoring = document.getElementById('systemMonitoring');
+                this.semanticAnalysis = document.getElementById('semanticAnalysis');
+                
+                // Event listeners
+                this.startBtn.addEventListener('click', () => this.startRecording());
+                this.stopBtn.addEventListener('click', () => this.stopRecording());
+                this.refreshStatusBtn.addEventListener('click', () => this.refreshStatus());
+                this.launchTaskMgrBtn.addEventListener('click', () => this.launchTaskManager());
+                this.getProcessesBtn.addEventListener('click', () => this.getProcessList());
+                
+                // User action capture for analysis
+                this.setupActionCapture();
+            }
+            
+            connectWebSocket() {
+                try {
+                    this.ws = new WebSocket('ws://localhost:8765');
+                    
+                    this.ws.onopen = () => {
+                        this.isConnected = true;
+                        this.recordingStatus.classList.add('active');
+                        this.logEvent('Connected to intelligent MKD backend', 'system');
+                        this.refreshStatus();
+                    };
+                    
+                    this.ws.onclose = () => {
+                        this.isConnected = false;
+                        this.recordingStatus.classList.remove('active', 'recording');
+                        this.logEvent('Disconnected from backend. Reconnecting...', 'system');
+                        setTimeout(() => this.connectWebSocket(), 3000);
+                    };
+                    
+                    this.ws.onmessage = (event) => {
+                        this.handleMessage(JSON.parse(event.data));
+                    };
+                    
+                } catch (error) {
+                    this.logEvent(`Connection error: ${error.message}`, 'system');
+                }
+            }
+            
+            handleMessage(message) {
+                switch (message.type) {
+                    case 'connection_established':
+                        this.handleConnectionInfo(message.server_info);
+                        break;
+                    case 'recording_started':
+                        this.handleRecordingStarted();
+                        break;
+                    case 'recording_stopped':
+                        this.handleRecordingStopped(message);
+                        break;
+                    case 'system_status':
+                        this.updateSystemStatus(message.status);
+                        break;
+                    case 'process_list':
+                        this.displayProcessList(message.processes);
+                        break;
+                    case 'action_analysis':
+                        this.displayActionAnalysis(message.analysis);
+                        break;
+                    case 'task_manager_launched':
+                        this.logEvent(`Task Manager launched (PID: ${message.pid})`, 'system');
+                        break;
+                    case 'error':
+                        this.logEvent(`Error: ${message.message}`, 'system');
+                        break;
+                }
+            }
+            
+            handleConnectionInfo(info) {
+                this.logEvent(`Connected to MKD v${info.version}`, 'system');
+                if (info.system_monitor_available) {
+                    this.logEvent('✅ System monitoring available', 'system');
+                    this.logEvent('✅ Process monitoring enabled', 'system');
+                    this.logEvent('✅ Task Manager integration ready', 'system');
+                    this.logEvent('✅ Semantic analysis active', 'system');
+                } else {
+                    this.logEvent('⚠️ System monitoring not available', 'system');
+                }
+            }
+            
+            async startRecording() {
+                if (!this.isConnected) {
+                    this.logEvent('Not connected to backend!', 'system');
+                    return;
+                }
+                
+                // Request screen capture
+                try {
+                    const stream = await navigator.mediaDevices.getDisplayMedia({
+                        video: { mediaSource: 'screen' },
+                        audio: false
+                    });
+                    stream.getTracks().forEach(track => track.stop()); // Just for permission test
+                } catch (error) {
+                    this.logEvent('Screen capture permission denied', 'system');
+                    return;
+                }
+                
+                const settings = {
+                    capture_mouse: true,
+                    capture_keyboard: true,
+                    capture_screenshots: true,
+                    system_monitoring: this.systemMonitoring.checked,
+                    auto_launch_task_manager: this.autoTaskManager.checked,
+                    semantic_analysis: this.semanticAnalysis.checked
+                };
+                
+                this.ws.send(JSON.stringify({
+                    type: 'start_recording',
+                    settings: settings
+                }));
+                
+                this.userActions = [];
+                this.correlations = [];
+                this.systemEvents = 0;
+                this.systemEventsCount.textContent = '0';
+            }
+            
+            stopRecording() {
+                if (!this.isConnected) return;
+                
+                this.ws.send(JSON.stringify({
+                    type: 'stop_recording'
+                }));
+            }
+            
+            handleRecordingStarted() {
+                this.isRecording = true;
+                this.startBtn.disabled = true;
+                this.stopBtn.disabled = false;
+                this.recordingStatus.classList.add('recording');
+                this.logEvent('🔴 Intelligent recording started!', 'system');
+                this.logEvent('🧠 System monitoring active', 'system');
+                this.logEvent('🎯 Semantic analysis enabled', 'system');
+            }
+            
+            handleRecordingStopped(data) {
+                this.isRecording = false;
+                this.startBtn.disabled = false;
+                this.stopBtn.disabled = true;
+                this.replayBtn.disabled = false;
+                this.recordingStatus.classList.remove('recording');
+                
+                const summary = data.semantic_summary || {};
+                
+                this.logEvent(`📊 Recording completed!`, 'system');
+                this.logEvent(`⏱️ Duration: ${data.duration?.toFixed(1) || 0}s`, 'system');
+                this.logEvent(`🖱️ User actions: ${data.actions || 0}`, 'user');
+                this.logEvent(`🖼️ Screenshots: ${data.screenshots || 0}`, 'system');
+                this.logEvent(`🔧 System events: ${data.system_events || 0}`, 'system');
+                
+                if (summary.session_narrative) {
+                    this.logEvent(`📝 Session: ${summary.session_narrative}`, 'correlation');
+                }
+                
+                this.systemEventsCount.textContent = data.system_events || 0;
+            }
+            
+            refreshStatus() {
+                if (!this.isConnected) return;
+                
+                this.ws.send(JSON.stringify({
+                    type: 'get_system_status'
+                }));
+            }
+            
+            updateSystemStatus(status) {
+                this.cpuUsage.textContent = `${status.cpu_percent || 0}%`;
+                this.memoryUsage.textContent = `${status.memory_percent || 0}%`;
+                this.processCount.textContent = status.process_count || 0;
+                
+                // Color-code CPU usage
+                const cpuPercent = status.cpu_percent || 0;
+                this.cpuUsage.style.color = cpuPercent > 80 ? '#e53e3e' : 
+                                          cpuPercent > 60 ? '#ed8936' : '#38a169';
+                
+                // Color-code memory usage  
+                const memPercent = status.memory_percent || 0;
+                this.memoryUsage.style.color = memPercent > 85 ? '#e53e3e' : 
+                                              memPercent > 70 ? '#ed8936' : '#38a169';
+            }
+            
+            launchTaskManager() {
+                if (!this.isConnected) return;
+                
+                this.ws.send(JSON.stringify({
+                    type: 'launch_task_manager'
+                }));
+            }
+            
+            getProcessList() {
+                if (!this.isConnected) return;
+                
+                this.ws.send(JSON.stringify({
+                    type: 'get_process_list'
+                }));
+            }
+            
+            displayProcessList(processes) {
+                this.processList.innerHTML = '';
+                
+                processes.slice(0, 20).forEach(proc => {
+                    const item = document.createElement('div');
+                    item.className = 'process-item';
+                    item.innerHTML = `
+                        <span class="process-name">${proc.name}</span>
+                        <span class="process-cpu">${proc.cpu_percent.toFixed(1)}%</span>
+                    `;
+                    this.processList.appendChild(item);
+                });
+                
+                this.logEvent(`📋 Process list updated (${processes.length} processes)`, 'system');
+            }
+            
+            setupActionCapture() {
+                // Capture user actions for analysis
+                document.addEventListener('click', (e) => {
+                    if (this.isRecording) {
+                        this.analyzeUserAction({
+                            type: 'mouse_down',
+                            data: { x: e.clientX, y: e.clientY, button: 'left' },
+                            timestamp: Date.now() / 1000
+                        });
+                    }
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (this.isRecording) {
+                        this.analyzeUserAction({
+                            type: 'key_down',
+                            data: { 
+                                key: e.key.toUpperCase(),
+                                ctrlKey: e.ctrlKey,
+                                altKey: e.altKey,
+                                shiftKey: e.shiftKey
+                            },
+                            timestamp: Date.now() / 1000
+                        });
+                    }
+                });
+            }
+            
+            analyzeUserAction(action) {
+                if (!this.isConnected || !this.semanticAnalysis.checked) return;
+                
+                this.userActions.push(action);
+                
+                // Send for analysis
+                this.ws.send(JSON.stringify({
+                    type: 'analyze_user_action',
+                    action: action
+                }));
+            }
+            
+            displayActionAnalysis(analysis) {
+                // Display correlation between user action and system event
+                const userAction = analysis.user_action;
+                const systemEvent = analysis.correlated_system_event;
+                const meaning = analysis.semantic_meaning;
+                
+                if (systemEvent) {
+                    const pair = document.createElement('div');
+                    pair.className = 'correlation-pair';
+                    pair.innerHTML = `
+                        <div class="user-action">
+                            <strong>User:</strong> ${userAction.type}<br>
+                            <small>${JSON.stringify(userAction.data).substring(0, 50)}...</small>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="system-result">
+                            <strong>Result:</strong> ${meaning}<br>
+                            <small>Process: ${systemEvent.process_name}</small>
+                        </div>
+                    `;
+                    
+                    this.correlationDisplay.appendChild(pair);
+                    
+                    // Keep only last 10 correlations
+                    while (this.correlationDisplay.children.length > 10) {
+                        this.correlationDisplay.removeChild(this.correlationDisplay.firstChild);
+                    }
+                    
+                    this.logEvent(`🧠 Correlation: ${meaning}`, 'correlation');
+                }
+            }
+            
+            logEvent(message, type = 'system') {
+                const line = document.createElement('div');
+                line.className = `event-line event-${type}`;
+                
+                const timestamp = new Date().toLocaleTimeString();
+                line.innerHTML = `<span style="color: #718096;">[${timestamp}]</span> ${message}`;
+                
+                this.eventsLog.appendChild(line);
+                this.eventsLog.scrollTop = this.eventsLog.scrollHeight;
+                
+                // Keep only last 50 lines
+                while (this.eventsLog.children.length > 50) {
+                    this.eventsLog.removeChild(this.eventsLog.firstChild);
+                }
+            }
+        }
+        
+        // Initialize the intelligent recorder
+        const recorder = new IntelligentRecorder();
+        
+        // Auto-refresh system status every 5 seconds
+        setInterval(() => {
+            if (recorder.isConnected) {
+                recorder.refreshStatus();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

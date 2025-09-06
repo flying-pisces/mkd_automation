@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Dict, Set, Optional, Any
 
 import websockets
-from websockets import WebSocketServerProtocol
+# from websockets import WebSocketServerProtocol  # Deprecated in newer versions
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
@@ -36,6 +36,14 @@ except ImportError as e:
     print(f"Warning: MKD modules not available: {e}")
     HAS_MKD = False
 
+# Import system monitor
+try:
+    from system_monitor import SystemMonitor, TaskManagerController
+    HAS_SYSTEM_MONITOR = True
+except ImportError as e:
+    print(f"Warning: System monitor not available: {e}")
+    HAS_SYSTEM_MONITOR = False
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -50,7 +58,7 @@ class WebGUIBackend:
     def __init__(self, host: str = 'localhost', port: int = 8765):
         self.host = host
         self.port = port
-        self.clients: Set[WebSocketServerProtocol] = set()
+        self.clients: Set = set()  # Set of websocket connections
         
         # MKD components
         if HAS_MKD:
@@ -79,9 +87,17 @@ class WebGUIBackend:
         self.screenshot_thread = None
         self.screenshot_count = 0
         
-        logger.info(f"WebGUI Backend initialized (MKD available: {HAS_MKD})")
+        # System monitoring
+        if HAS_SYSTEM_MONITOR:
+            self.system_monitor = SystemMonitor()
+            self.task_manager = TaskManagerController()
+        else:
+            self.system_monitor = None
+            self.task_manager = None
+        
+        logger.info(f"WebGUI Backend initialized (MKD available: {HAS_MKD}, System Monitor: {HAS_SYSTEM_MONITOR})")
     
-    async def register_client(self, websocket: WebSocketServerProtocol):
+    async def register_client(self, websocket):
         """Register a new client connection."""
         self.clients.add(websocket)
         logger.info(f"Client connected: {websocket.remote_address}")
@@ -91,17 +107,24 @@ class WebGUIBackend:
             "type": "connection_established",
             "server_info": {
                 "mkd_available": HAS_MKD,
+                "system_monitor_available": HAS_SYSTEM_MONITOR,
                 "platform": self.platform_detector.get_platform() if HAS_MKD else "unknown",
-                "version": "2.0"
+                "version": "2.1",
+                "features": {
+                    "process_monitoring": HAS_SYSTEM_MONITOR,
+                    "task_manager_integration": HAS_SYSTEM_MONITOR,
+                    "semantic_analysis": HAS_SYSTEM_MONITOR,
+                    "intelligent_replay": HAS_SYSTEM_MONITOR
+                }
             }
         })
     
-    async def unregister_client(self, websocket: WebSocketServerProtocol):
+    async def unregister_client(self, websocket):
         """Unregister a client connection."""
         self.clients.discard(websocket)
         logger.info(f"Client disconnected: {websocket.remote_address}")
     
-    async def send_to_client(self, websocket: WebSocketServerProtocol, message: Dict[str, Any]):
+    async def send_to_client(self, websocket, message: Dict[str, Any]):
         """Send message to a specific client."""
         try:
             await websocket.send(json.dumps(message))
@@ -129,7 +152,7 @@ class WebGUIBackend:
         for client in disconnected:
             self.clients.discard(client)
     
-    async def handle_message(self, websocket: WebSocketServerProtocol, message: str):
+    async def handle_message(self, websocket, message: str):
         """Handle incoming message from client."""
         try:
             data = json.loads(message)
@@ -149,6 +172,18 @@ class WebGUIBackend:
                 await self.load_recording(websocket, data.get('recording_id'))
             elif message_type == 'replay_actions':
                 await self.replay_actions(websocket, data.get('actions', []))
+            elif message_type == 'save_video':
+                await self.save_video_data(websocket, data.get('video_data'), data.get('recording_id'))
+            elif message_type == 'save_screenshots':
+                await self.save_screenshot_data(websocket, data.get('screenshots'), data.get('recording_id'))
+            elif message_type == 'get_system_status':
+                await self.get_system_status(websocket)
+            elif message_type == 'launch_task_manager':
+                await self.launch_task_manager(websocket)
+            elif message_type == 'get_process_list':
+                await self.get_process_list(websocket)
+            elif message_type == 'analyze_user_action':
+                await self.analyze_user_action(websocket, data.get('action'))
             else:
                 logger.warning(f"Unknown message type: {message_type}")
                 
@@ -166,7 +201,7 @@ class WebGUIBackend:
                 "message": f"Server error: {str(e)}"
             })
     
-    async def start_recording(self, websocket: WebSocketServerProtocol, settings: Dict[str, Any]):
+    async def start_recording(self, websocket, settings: Dict[str, Any]):
         """Start recording session."""
         try:
             if self.recording_session:
@@ -206,6 +241,16 @@ class WebGUIBackend:
             if settings.get('capture_screenshots', False):
                 await self.start_screenshot_capture()
             
+            # Start system monitoring (if available and enabled)
+            if HAS_SYSTEM_MONITOR and self.system_monitor and settings.get('system_monitoring', True):
+                asyncio.create_task(self.system_monitor.start_monitoring())
+                logger.info("System monitoring started")
+                
+                # Launch Task Manager if requested
+                if settings.get('auto_launch_task_manager', True):
+                    await self.task_manager.launch_task_manager()
+                    logger.info("Task Manager launched automatically")
+            
             await self.send_to_client(websocket, {
                 "type": "recording_started",
                 "session_id": str(id(self.recording_session)),
@@ -226,7 +271,7 @@ class WebGUIBackend:
                 "message": f"Failed to start recording: {str(e)}"
             })
     
-    async def stop_recording(self, websocket: WebSocketServerProtocol):
+    async def stop_recording(self, websocket):
         """Stop recording session and save data."""
         try:
             if not self.recording_session:
@@ -263,6 +308,19 @@ class WebGUIBackend:
             # Stop screenshot capture
             await self.stop_screenshot_capture()
             
+            # Stop system monitoring and get results
+            system_events = []
+            semantic_summary = {}
+            if HAS_SYSTEM_MONITOR and self.system_monitor:
+                await self.system_monitor.stop_monitoring()
+                system_events = self.system_monitor.events.copy()
+                semantic_summary = self.system_monitor.get_semantic_summary()
+                logger.info(f"System monitoring stopped. Captured {len(system_events)} system events")
+                
+                # Close Task Manager if we opened it
+                if self.task_manager:
+                    await self.task_manager.close_task_manager()
+            
             duration = time.time() - self.recording_start_time if self.recording_start_time else 0
             
             await self.send_to_client(websocket, {
@@ -270,7 +328,9 @@ class WebGUIBackend:
                 "duration": duration,
                 "actions": actions_count,
                 "screenshots": self.screenshot_count,
-                "recording_dir": str(self.current_recording_dir)
+                "recording_dir": str(self.current_recording_dir),
+                "system_events": len(system_events),
+                "semantic_summary": semantic_summary
             })
             
             await self.broadcast_to_all({
@@ -317,14 +377,15 @@ class WebGUIBackend:
             # Don't send error to client for actions to avoid spam
     
     async def start_screenshot_capture(self):
-        """Start simulated screenshot capture."""
-        # Simulate screenshot capture by incrementing counter
+        """Start screenshot capture notification loop."""
+        # Note: Actual screenshot capture happens on the client side
+        # This just tracks the count for statistics
         async def capture_loop():
             while self.recording_session:
-                await asyncio.sleep(0.5)  # 2 FPS
+                await asyncio.sleep(0.5)  # 2 FPS notification rate
                 self.screenshot_count += 1
                 
-                # Notify clients about screenshot
+                # Notify clients about screenshot count
                 await self.broadcast_to_all({
                     "type": "screenshot_captured",
                     "count": self.screenshot_count
@@ -341,7 +402,7 @@ class WebGUIBackend:
             except asyncio.CancelledError:
                 pass
     
-    async def send_recordings_list(self, websocket: WebSocketServerProtocol):
+    async def send_recordings_list(self, websocket):
         """Send list of available recordings to client."""
         try:
             recordings = []
@@ -376,7 +437,7 @@ class WebGUIBackend:
                 "message": f"Failed to get recordings: {str(e)}"
             })
     
-    async def load_recording(self, websocket: WebSocketServerProtocol, recording_id: str):
+    async def load_recording(self, websocket, recording_id: str):
         """Load a specific recording for replay."""
         try:
             recording_dir = self.recordings_dir / recording_id
@@ -420,7 +481,7 @@ class WebGUIBackend:
                 "message": f"Failed to load recording: {str(e)}"
             })
     
-    async def replay_actions(self, websocket: WebSocketServerProtocol, actions: list):
+    async def replay_actions(self, websocket, actions: list):
         """Execute replay of actions."""
         try:
             if not HAS_MKD or not self.action_executor:
@@ -479,7 +540,203 @@ class WebGUIBackend:
                 "message": f"Replay failed: {str(e)}"
             })
     
-    async def handle_client(self, websocket: WebSocketServerProtocol, path: str):
+    async def save_video_data(self, websocket, video_data: str, recording_id: str = None):
+        """Save video data received from client."""
+        try:
+            if not recording_id:
+                recording_id = datetime.now().strftime("web_recording_%Y%m%d_%H%M%S")
+            
+            recording_dir = self.recordings_dir / recording_id
+            recording_dir.mkdir(exist_ok=True)
+            
+            # Save video data (base64 encoded)
+            video_file = recording_dir / "recording.webm"
+            
+            # Decode base64 and save
+            import base64
+            video_bytes = base64.b64decode(video_data.split(',')[1] if ',' in video_data else video_data)
+            
+            with open(video_file, 'wb') as f:
+                f.write(video_bytes)
+            
+            logger.info(f"Saved video to {video_file}")
+            
+            await self.send_to_client(websocket, {
+                "type": "video_saved",
+                "recording_id": recording_id,
+                "path": str(video_file),
+                "size": len(video_bytes)
+            })
+            
+        except Exception as e:
+            logger.error(f"Error saving video data: {e}")
+            await self.send_to_client(websocket, {
+                "type": "error",
+                "message": f"Failed to save video: {str(e)}"
+            })
+    
+    async def save_screenshot_data(self, websocket, screenshots: list, recording_id: str = None):
+        """Save screenshot data received from client."""
+        try:
+            if not recording_id:
+                recording_id = datetime.now().strftime("web_recording_%Y%m%d_%H%M%S")
+            
+            recording_dir = self.recordings_dir / recording_id
+            recording_dir.mkdir(exist_ok=True)
+            screenshots_dir = recording_dir / "screenshots"
+            screenshots_dir.mkdir(exist_ok=True)
+            
+            import base64
+            
+            for i, screenshot in enumerate(screenshots):
+                # Save each screenshot
+                screenshot_file = screenshots_dir / f"screenshot_{i:04d}.jpg"
+                
+                # Decode base64 and save
+                img_data = screenshot.get('data', '')
+                if img_data:
+                    img_bytes = base64.b64decode(img_data.split(',')[1] if ',' in img_data else img_data)
+                    
+                    with open(screenshot_file, 'wb') as f:
+                        f.write(img_bytes)
+            
+            logger.info(f"Saved {len(screenshots)} screenshots to {screenshots_dir}")
+            
+            await self.send_to_client(websocket, {
+                "type": "screenshots_saved",
+                "recording_id": recording_id,
+                "path": str(screenshots_dir),
+                "count": len(screenshots)
+            })
+            
+        except Exception as e:
+            logger.error(f"Error saving screenshots: {e}")
+            await self.send_to_client(websocket, {
+                "type": "error",
+                "message": f"Failed to save screenshots: {str(e)}"
+            })
+    
+    async def get_system_status(self, websocket):
+        """Get current system status"""
+        try:
+            if not HAS_SYSTEM_MONITOR:
+                await self.send_to_client(websocket, {
+                    "type": "error",
+                    "message": "System monitoring not available"
+                })
+                return
+            
+            # Get current system info
+            import psutil
+            status = {
+                "cpu_percent": psutil.cpu_percent(),
+                "memory_percent": psutil.virtual_memory().percent,
+                "disk_percent": psutil.disk_usage('/').percent if sys.platform != 'win32' else psutil.disk_usage('C:').percent,
+                "process_count": len(psutil.pids()),
+                "system_monitor_active": self.system_monitor.is_monitoring if self.system_monitor else False
+            }
+            
+            await self.send_to_client(websocket, {
+                "type": "system_status",
+                "status": status
+            })
+            
+        except Exception as e:
+            logger.error(f"Error getting system status: {e}")
+            await self.send_to_client(websocket, {
+                "type": "error",
+                "message": f"Failed to get system status: {str(e)}"
+            })
+    
+    async def launch_task_manager(self, websocket):
+        """Launch Task Manager"""
+        try:
+            if not HAS_SYSTEM_MONITOR or not self.task_manager:
+                await self.send_to_client(websocket, {
+                    "type": "error", 
+                    "message": "Task Manager integration not available"
+                })
+                return
+            
+            success = await self.task_manager.launch_task_manager()
+            
+            await self.send_to_client(websocket, {
+                "type": "task_manager_launched",
+                "success": success,
+                "pid": self.task_manager.task_manager_pid
+            })
+            
+        except Exception as e:
+            logger.error(f"Error launching Task Manager: {e}")
+            await self.send_to_client(websocket, {
+                "type": "error",
+                "message": f"Failed to launch Task Manager: {str(e)}"
+            })
+    
+    async def get_process_list(self, websocket):
+        """Get current process list"""
+        try:
+            if not HAS_SYSTEM_MONITOR or not self.task_manager:
+                await self.send_to_client(websocket, {
+                    "type": "error",
+                    "message": "Process monitoring not available"
+                })
+                return
+            
+            processes = self.task_manager.get_process_list()
+            
+            await self.send_to_client(websocket, {
+                "type": "process_list",
+                "processes": processes[:50]  # Send top 50 processes
+            })
+            
+        except Exception as e:
+            logger.error(f"Error getting process list: {e}")
+            await self.send_to_client(websocket, {
+                "type": "error", 
+                "message": f"Failed to get process list: {str(e)}"
+            })
+    
+    async def analyze_user_action(self, websocket, action):
+        """Analyze user action for semantic meaning"""
+        try:
+            if not HAS_SYSTEM_MONITOR or not self.system_monitor:
+                await self.send_to_client(websocket, {
+                    "type": "error",
+                    "message": "System monitoring not available for action analysis"
+                })
+                return
+            
+            # Correlate action with system events
+            correlated_event = self.system_monitor.correlate_with_user_action(action)
+            
+            analysis = {
+                "user_action": action,
+                "timestamp": action.get('timestamp', time.time()),
+                "correlated_system_event": correlated_event.__dict__ if correlated_event else None,
+                "semantic_meaning": correlated_event.semantic_action if correlated_event else "Low-level input action"
+            }
+            
+            # Check for hotkey patterns
+            if action.get('type') == 'key_down':
+                # This would need to be enhanced to detect key combinations
+                key = action.get('data', {}).get('key', '')
+                if key:
+                    analysis['hotkey_analysis'] = f"Key press: {key}"
+            
+            await self.send_to_client(websocket, {
+                "type": "action_analysis",
+                "analysis": analysis
+            })
+            
+        except Exception as e:
+            logger.error(f"Error analyzing user action: {e}")
+            await self.send_to_client(websocket, {
+                "type": "error",
+                "message": f"Failed to analyze action: {str(e)}"
+            })
+
+    async def handle_client(self, websocket, path=None):
         """Handle individual client connection."""
         await self.register_client(websocket)
         

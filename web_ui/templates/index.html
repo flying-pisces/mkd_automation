@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MKD Desktop Automation - Web Control</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 300;
+        }
+
+        .status-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .status-online { background: #27ae60; }
+        .status-offline { background: #e74c3c; }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .panel h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Conversation Interface */
+        .conversation-panel {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .conversation-panel h2 {
+            color: white;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .chat-container {
+            height: 300px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .chat-message {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+        }
+
+        .user-message {
+            background: rgba(255,255,255,0.1);
+            text-align: right;
+        }
+
+        .system-message {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .success-message {
+            background: rgba(39, 174, 96, 0.3);
+        }
+
+        .error-message {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .command-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .command-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .command-input button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .command-input button:hover {
+            background: #2ecc71;
+        }
+
+        /* Mouse Control */
+        .mouse-area {
+            width: 100%;
+            height: 300px;
+            background: #ecf0f1;
+            border: 2px dashed #bdc3c7;
+            border-radius: 5px;
+            position: relative;
+            cursor: crosshair;
+            margin-bottom: 1rem;
+        }
+
+        .mouse-coords {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+
+        .mouse-click-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #e74c3c;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: click-pulse 0.5s ease-out;
+        }
+
+        @keyframes click-pulse {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #2ecc71; }
+
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+
+        .btn-warning { background: #f39c12; }
+        .btn-warning:hover { background: #e67e22; }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        /* Lists */
+        .list-container {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .list-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item:hover {
+            background: #f8f9fa;
+        }
+
+        .list-item-info {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .list-item-details {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .list-item-actions {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* Screenshot Display */
+        .screenshot-container {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .screenshot-img {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin: 1rem auto;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖥️ MKD Desktop Automation</h1>
+    </div>
+    
+    <div class="status-bar" id="statusBar">
+        <span id="statusText">Connecting...</span>
+    </div>
+
+    <div class="container">
+        <!-- Conversation Interface -->
+        <div class="panel conversation-panel full-width">
+            <h2>💬 Natural Language Commands</h2>
+            <div class="chat-container" id="chatContainer">
+                <div class="chat-message system-message">
+                    Welcome to MKD Desktop Automation! Type commands like:
+                    <br>• "click at 500, 300"
+                    <br>• "type hello world" 
+                    <br>• "open notepad"
+                    <br>• "take screenshot"
+                </div>
+            </div>
+            <div class="command-input">
+                <input type="text" id="commandInput" placeholder="Type your command here..." autocomplete="off">
+                <button onclick="executeCommand()">Execute</button>
+            </div>
+        </div>
+
+        <!-- Mouse Control -->
+        <div class="panel">
+            <h2>🖱️ Mouse Control</h2>
+            <div class="mouse-area" id="mouseArea">
+                <div class="mouse-coords" id="mouseCoords">X: 0, Y: 0</div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="takeScreenshot()">📸 Screenshot</button>
+                <button class="btn btn-warning" onclick="moveMouseTo(400, 300)">Move Center</button>
+            </div>
+        </div>
+
+        <!-- Keyboard Control -->
+        <div class="panel">
+            <h2>⌨️ Keyboard Control</h2>
+            <div class="form-group">
+                <label>Type Text:</label>
+                <textarea id="typeText" placeholder="Enter text to type..."></textarea>
+                <button class="btn btn-success" onclick="typeText()">Type Text</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Key Combinations:</label>
+                <div class="btn-group">
+                    <button class="btn" onclick="pressKeys(['ctrl', 'c'])">Ctrl+C</button>
+                    <button class="btn" onclick="pressKeys(['ctrl', 'v'])">Ctrl+V</button>
+                    <button class="btn" onclick="pressKeys(['ctrl', 'a'])">Ctrl+A</button>
+                    <button class="btn" onclick="pressKeys(['alt', 'tab'])">Alt+Tab</button>
+                    <button class="btn" onclick="pressKeys(['win', 'r'])">Win+R</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Management -->
+        <div class="panel">
+            <h2>🚀 Applications</h2>
+            <div class="form-group">
+                <label>Launch Application:</label>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="launchApp('notepad')">Notepad</button>
+                    <button class="btn btn-success" onclick="launchApp('calculator')">Calculator</button>
+                    <button class="btn btn-success" onclick="launchApp('cmd')">Command Prompt</button>
+                    <button class="btn btn-success" onclick="launchApp('explorer')">File Explorer</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Running Applications:</label>
+                <button class="btn" onclick="refreshApps()">🔄 Refresh</button>
+                <div class="list-container" id="appsList">
+                    <div class="list-item">
+                        <div class="list-item-info">Click refresh to load applications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window Management -->
+        <div class="panel">
+            <h2>🪟 Window Management</h2>
+            <button class="btn" onclick="refreshWindows()">🔄 Refresh Windows</button>
+            <div class="list-container" id="windowsList">
+                <div class="list-item">
+                    <div class="list-item-info">Click refresh to load windows</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Operations -->
+        <div class="panel">
+            <h2>📁 File Operations</h2>
+            <div class="form-group">
+                <label>Directory Path:</label>
+                <input type="text" id="filePath" value="" placeholder="Enter directory path...">
+                <button class="btn" onclick="browseFiles()">Browse</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Quick Actions:</label>
+                <div class="btn-group">
+                    <button class="btn" onclick="openPath('C:/')">Open C:\</button>
+                    <button class="btn" onclick="openPath(getUserHome())">Home Folder</button>
+                    <button class="btn" onclick="openPath('C:/Users')">Users</button>
+                </div>
+            </div>
+
+            <div class="list-container" id="filesList">
+                <div class="list-item">
+                    <div class="list-item-info">Enter a path and click Browse</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Tools -->
+        <div class="panel">
+            <h2>🛠️ System Tools</h2>
+            <div class="btn-group">
+                <button class="btn" onclick="openSystemTool('taskmgr')">Task Manager</button>
+                <button class="btn" onclick="openSystemTool('control')">Control Panel</button>
+                <button class="btn" onclick="openSystemTool('regedit')">Registry Editor</button>
+                <button class="btn" onclick="openSystemTool('services.msc')">Services</button>
+            </div>
+            
+            <div class="form-group">
+                <button class="btn btn-warning" onclick="lockComputer()">🔒 Lock Computer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screenshot Display Modal -->
+    <div id="screenshotModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+        <div style="max-width: 90%; max-height: 90%; background: white; padding: 1rem; border-radius: 8px;">
+            <div style="text-align: right; margin-bottom: 1rem;">
+                <button onclick="closeScreenshot()" style="background: #e74c3c; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Close</button>
+            </div>
+            <img id="screenshotImg" style="max-width: 100%; max-height: 80vh;" />
+        </div>
+    </div>
+
+    <script>
+        // Socket.IO connection
+        const socket = io();
+        let isConnected = false;
+
+        // Connection status
+        socket.on('connect', function() {
+            isConnected = true;
+            updateStatus('Connected - Ready for commands', true);
+        });
+
+        socket.on('disconnect', function() {
+            isConnected = false;
+            updateStatus('Disconnected - Attempting to reconnect...', false);
+        });
+
+        socket.on('command_result', function(data) {
+            addChatMessage(`${data.command}`, 'user-message');
+            if (data.success) {
+                addChatMessage(`✓ ${data.message}`, 'success-message');
+            } else {
+                addChatMessage(`✗ ${data.message}`, 'error-message');
+            }
+        });
+
+        function updateStatus(message, online) {
+            const statusBar = document.getElementById('statusBar');
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = message;
+            statusBar.className = online ? 'status-bar status-online' : 'status-bar status-offline';
+        }
+
+        function addChatMessage(message, className) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${className}`;
+            messageDiv.innerHTML = message;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Conversation interface
+        function executeCommand() {
+            const input = document.getElementById('commandInput');
+            const command = input.value.trim();
+            
+            if (!command) return;
+            
+            // Clear input
+            input.value = '';
+            
+            // Add to chat
+            addChatMessage(command, 'user-message');
+            addChatMessage('Processing...', 'system-message');
+            
+            // Send via API
+            fetch('/api/command/execute', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({command: command})
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove "Processing..." message
+                const messages = document.querySelectorAll('.chat-message');
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage && lastMessage.textContent === 'Processing...') {
+                    lastMessage.remove();
+                }
+                
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                } else {
+                    addChatMessage(`✗ ${data.error || data.message}`, 'error-message');
+                }
+            })
+            .catch(error => {
+                addChatMessage(`✗ Error: ${error}`, 'error-message');
+            });
+        }
+
+        // Enter key support for command input
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                executeCommand();
+            }
+        });
+
+        // Mouse control
+        const mouseArea = document.getElementById('mouseArea');
+        const mouseCoords = document.getElementById('mouseCoords');
+
+        mouseArea.addEventListener('mousemove', function(e) {
+            const rect = mouseArea.getBoundingClientRect();
+            const x = Math.round(e.clientX - rect.left);
+            const y = Math.round(e.clientY - rect.top);
+            mouseCoords.textContent = `X: ${x}, Y: ${y}`;
+        });
+
+        mouseArea.addEventListener('click', function(e) {
+            const rect = mouseArea.getBoundingClientRect();
+            const x = Math.round(e.clientX - rect.left);
+            const y = Math.round(e.clientY - rect.top);
+            
+            // Scale coordinates to screen resolution (approximate)
+            const screenX = Math.round((x / rect.width) * screen.width);
+            const screenY = Math.round((y / rect.height) * screen.height);
+            
+            // Visual feedback
+            const indicator = document.createElement('div');
+            indicator.className = 'mouse-click-indicator';
+            indicator.style.left = `${x}px`;
+            indicator.style.top = `${y}px`;
+            mouseArea.appendChild(indicator);
+            
+            setTimeout(() => {
+                mouseArea.removeChild(indicator);
+            }, 500);
+            
+            // Execute click
+            clickAt(screenX, screenY);
+        });
+
+        // API functions
+        function clickAt(x, y) {
+            fetch('/api/desktop/click', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({x: x, y: y})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function moveMouseTo(x, y) {
+            fetch('/api/desktop/move', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({x: x, y: y})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function typeText() {
+            const text = document.getElementById('typeText').value;
+            if (!text) return;
+            
+            fetch('/api/desktop/type', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text: text})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                    document.getElementById('typeText').value = '';
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function pressKeys(keys) {
+            fetch('/api/desktop/key', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({keys: keys})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function takeScreenshot() {
+            addChatMessage('📸 Taking screenshot...', 'system-message');
+            
+            fetch('/api/desktop/screenshot', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                    
+                    if (data.image_data) {
+                        // Show screenshot in modal
+                        const modal = document.getElementById('screenshotModal');
+                        const img = document.getElementById('screenshotImg');
+                        img.src = data.image_data;
+                        modal.style.display = 'flex';
+                    }
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function closeScreenshot() {
+            document.getElementById('screenshotModal').style.display = 'none';
+        }
+
+        function launchApp(appName) {
+            fetch('/api/apps/launch', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({app_name: appName})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                    refreshApps(); // Auto-refresh app list
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function closeApp(identifier, pid = null) {
+            fetch('/api/apps/close', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({app_name: identifier, pid: pid})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                    refreshApps(); // Auto-refresh app list
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function refreshApps() {
+            fetch('/api/apps/list')
+            .then(response => response.json())
+            .then(data => {
+                const appsList = document.getElementById('appsList');
+                appsList.innerHTML = '';
+                
+                if (data.success && data.apps.length > 0) {
+                    data.apps.forEach(app => {
+                        const item = document.createElement('div');
+                        item.className = 'list-item';
+                        item.innerHTML = `
+                            <div class="list-item-info">
+                                <div class="list-item-title">${app.name}</div>
+                                <div class="list-item-details">PID: ${app.pid} | Memory: ${app.memory_mb}MB</div>
+                            </div>
+                            <div class="list-item-actions">
+                                <button class="btn btn-danger btn-small" onclick="closeApp('${app.name}', ${app.pid})">Close</button>
+                            </div>
+                        `;
+                        appsList.appendChild(item);
+                    });
+                } else {
+                    appsList.innerHTML = '<div class="list-item"><div class="list-item-info">No applications found</div></div>';
+                }
+            });
+        }
+
+        function refreshWindows() {
+            fetch('/api/windows/list')
+            .then(response => response.json())
+            .then(data => {
+                const windowsList = document.getElementById('windowsList');
+                windowsList.innerHTML = '';
+                
+                if (data.success && data.windows.length > 0) {
+                    data.windows.forEach(window => {
+                        const item = document.createElement('div');
+                        item.className = 'list-item';
+                        item.innerHTML = `
+                            <div class="list-item-info">
+                                <div class="list-item-title">${window.title}</div>
+                                <div class="list-item-details">PID: ${window.pid} | Size: ${window.size[0]}x${window.size[1]}</div>
+                            </div>
+                            <div class="list-item-actions">
+                                <button class="btn btn-small" onclick="manageWindow('activate', ${window.hwnd})">Activate</button>
+                                <button class="btn btn-warning btn-small" onclick="manageWindow('minimize', ${window.hwnd})">Min</button>
+                                <button class="btn btn-success btn-small" onclick="manageWindow('maximize', ${window.hwnd})">Max</button>
+                                <button class="btn btn-danger btn-small" onclick="manageWindow('close', ${window.hwnd})">Close</button>
+                            </div>
+                        `;
+                        windowsList.appendChild(item);
+                    });
+                } else {
+                    windowsList.innerHTML = '<div class="list-item"><div class="list-item-info">No windows found or Windows automation not available</div></div>';
+                }
+            });
+        }
+
+        function manageWindow(action, hwnd) {
+            fetch('/api/windows/manage', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: action, hwnd: hwnd})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                    if (action !== 'close') {
+                        setTimeout(refreshWindows, 1000); // Refresh after a delay
+                    }
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function browseFiles() {
+            const path = document.getElementById('filePath').value || getUserHome();
+            
+            fetch('/api/files/list', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({directory: path})
+            })
+            .then(response => response.json())
+            .then(data => {
+                const filesList = document.getElementById('filesList');
+                filesList.innerHTML = '';
+                
+                if (data.success && data.files.length > 0) {
+                    // Update path input
+                    document.getElementById('filePath').value = data.directory;
+                    
+                    data.files.forEach(file => {
+                        const item = document.createElement('div');
+                        item.className = 'list-item';
+                        const icon = file.is_directory ? '📁' : '📄';
+                        const size = file.is_directory ? '' : `${Math.round(file.size / 1024)}KB`;
+                        
+                        item.innerHTML = `
+                            <div class="list-item-info">
+                                <div class="list-item-title">${icon} ${file.name}</div>
+                                <div class="list-item-details">${size}</div>
+                            </div>
+                            <div class="list-item-actions">
+                                <button class="btn btn-small" onclick="openPath('${file.path.replace(/\\/g, '\\\\')}')">${file.is_directory ? 'Browse' : 'Open'}</button>
+                            </div>
+                        `;
+                        filesList.appendChild(item);
+                    });
+                } else {
+                    filesList.innerHTML = '<div class="list-item"><div class="list-item-info">Directory empty or access denied</div></div>';
+                }
+            })
+            .catch(error => {
+                addChatMessage(`✗ Error browsing files: ${error}`, 'error-message');
+            });
+        }
+
+        function openPath(path) {
+            fetch('/api/files/open', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: path})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function openSystemTool(tool) {
+            // Use the launch app functionality for system tools
+            launchApp(tool);
+        }
+
+        function lockComputer() {
+            fetch('/api/command/execute', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({command: 'lock computer'})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addChatMessage(`✓ ${data.message}`, 'success-message');
+                } else {
+                    addChatMessage(`✗ ${data.error}`, 'error-message');
+                }
+            });
+        }
+
+        function getUserHome() {
+            return 'C:\\Users'; // Default fallback
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default file path
+            document.getElementById('filePath').value = getUserHome();
+            
+            // Check system status
+            fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'online') {
+                    updateStatus('System Ready - All components online', true);
+                } else {
+                    updateStatus('System Error - Some components unavailable', false);
+                }
+            })
+            .catch(() => {
+                updateStatus('Connection Error', false);
+            });
+        });
+    </script>
+</body>
+</html>
